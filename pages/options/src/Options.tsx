@@ -7,6 +7,7 @@ import { FiSettings, FiCpu, FiShield, FiHelpCircle } from 'react-icons/fi';
 import { GeneralSettings } from './components/GeneralSettings';
 import { ModelSettings } from './components/ModelSettings';
 import { FirewallSettings } from './components/FirewallSettings';
+import { HelpSettings } from './components/HelpSettings';
 type TabTypes = 'general' | 'models' | 'firewall' | 'help';
 
 const TABS: { id: TabTypes; icon: React.ComponentType<{ className?: string }>; label: string }[] = [
@@ -33,11 +34,7 @@ const Options = () => {
   }, []);
 
   const handleTabClick = (tabId: TabTypes) => {
-    if (tabId === 'help') {
-      window.open('https://oracle.com/axis/docs', '_blank');
-    } else {
-      setActiveTab(tabId);
-    }
+    setActiveTab(tabId);
   };
 
   const renderTabContent = () => {
@@ -48,6 +45,8 @@ const Options = () => {
         return <ModelSettings isDarkMode={isDarkMode} />;
       case 'firewall':
         return <FirewallSettings isDarkMode={isDarkMode} />;
+      case 'help':
+        return <HelpSettings isDarkMode={isDarkMode} />;
       default:
         return null;
     }
