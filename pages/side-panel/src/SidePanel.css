@@ -1,0 +1,242 @@
+/* Oracle Redwood Design System — CSS Variables */
+:root {
+  --rw-border-radius: 4px;
+  --rw-canvas: #F8F7F3;
+  --rw-accent-red: #C74634;
+  --rw-burnt-redwood: #8B2C20;
+  --rw-ebony: #2D2B29;
+  --rw-ebony-light: #3A3836;
+  --rw-ebony-muted: #4A4644;
+  --rw-border-light: #E0DDD5;
+  --rw-warm-gray: #C4BFBA;
+  --rw-warm-text: #6B6460;
+  --rw-command-font: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --rw-font-main: 'Oracle Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body {
+  font-family: var(--rw-font-main);
+}
+
+/* Code blocks — Oracle Redwood tint */
+code {
+  background: rgba(199, 70, 52, 0.08);
+  border-radius: var(--rw-border-radius);
+  padding: 0.15rem 0.45rem;
+  color: var(--rw-accent-red);
+  font-size: 0.85em;
+  font-family: var(--rw-command-font);
+}
+
+@media (prefers-color-scheme: dark) {
+  code {
+    background: rgba(199, 70, 52, 0.15);
+    color: #E5654F;
+  }
+}
+
+/* Scrollbar — warm neutral palette */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #EDE9E3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--rw-warm-gray);
+  border-radius: var(--rw-border-radius);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rw-accent-red);
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: var(--rw-ebony-light);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--rw-ebony-muted);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--rw-accent-red);
+  }
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  background-color: var(--rw-ebony);
+  color: #fff;
+  border-bottom: 1px solid var(--rw-ebony-muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .header {
+    border-bottom: 1px solid var(--rw-ebony-muted);
+  }
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.header-icons {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+/* Header icons — light in header */
+.header-icon {
+  color: var(--rw-warm-gray);
+  cursor: pointer;
+  transition: color 0.15s ease;
+  opacity: 0.8;
+}
+
+.header-icon:hover {
+  color: white;
+  opacity: 1;
+}
+
+/* Scrollbar gutter helper */
+.scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+}
+
+/* Oracle chat area background — Subtle Noise Texture */
+.oracle-chat-bg {
+  background-color: var(--rw-canvas);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  .oracle-chat-bg {
+    background-color: var(--rw-ebony);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+}
+
+/* Animations */
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 0px 0px rgba(199, 70, 52, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(199, 70, 52, 0.4);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes faintRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-faint-rotate {
+  animation: faintRotate 4s linear infinite;
+}
+
+/* Command Line Input styling */
+.command-input-container {
+  font-family: var(--rw-command-font);
+}
+
+.execute-glyph {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.execute-button:hover:not(:disabled) .execute-glyph {
+  transform: translateX(2px);
+  opacity: 1;
+}
+
+/* Dark mode text and backgrounds */
+@media (prefers-color-scheme: dark) {
+  .dark-mode-text {
+    color: #D4CFC9 !important;
+  }
+
+  .dark-mode-bg {
+    background-color: var(--rw-ebony-light) !important;
+  }
+
+  .dark-mode-border {
+    border-color: var(--rw-ebony-muted) !important;
+  }
+}
+
+/* Enterprise sizing overrides */
+.message-bubble {
+  max-width: 75%;
+  margin-bottom: 10px;
+  border-radius: var(--rw-border-radius);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Slim Command Line container */
+.command-input-container {
+  border-top: 1px solid var(--rw-border-light);
+  background: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .command-input-container {
+    background: var(--rw-ebony-light);
+    border-top-color: var(--rw-ebony-muted);
+  }
+}
+
+/* Slim CLI textarea */
+#chat-input-textarea {
+  min-height: 24px;
+  max-height: 120px;
+  font-family: var(--rw-command-font);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Execute glyph sizing */
+.execute-glyph {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.execute-button:hover:not(:disabled) .execute-glyph {
+  opacity: 1;
+  transform: translateX(2px);
+}

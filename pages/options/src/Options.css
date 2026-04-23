@@ -1,0 +1,56 @@
+/* Oracle Redwood Design System */
+:root {
+  --rw-border-radius: 4px;
+  --rw-canvas: #F8F7F3;
+  --rw-accent-red: #C74634;
+  --rw-burnt-redwood: #8B2C20;
+  --rw-ebony: #2D2B29;
+  --rw-ebony-light: #3A3836;
+  --rw-ebony-muted: #4A4644;
+  --rw-border-light: #E0DDD5;
+  --rw-warm-gray: #C4BFBA;
+  --rw-warm-text: #6B6460;
+  --rw-command-font: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --rw-font-main: 'Oracle Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body {
+  font-family: var(--rw-font-main);
+}
+
+#app-container {
+  width: 100vw;
+  height: 100vh;
+}
+
+code {
+  background: rgba(199, 70, 52, 0.08);
+  border-radius: var(--rw-border-radius);
+  padding: 0.15rem 0.45rem;
+  color: var(--rw-accent-red);
+  font-size: 0.85em;
+  font-family: var(--rw-command-font);
+}
+
+@media (prefers-color-scheme: dark) {
+  code {
+    background: rgba(199, 70, 52, 0.15);
+    color: #E5654F;
+  }
+
+  .dark-mode-text { color: #D4CFC9 !important; }
+  .dark-mode-bg { background-color: var(--rw-ebony-light) !important; }
+  .dark-mode-border { border-color: var(--rw-ebony-muted) !important; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #EDE9E3; }
+::-webkit-scrollbar-thumb { background: var(--rw-warm-gray); border-radius: var(--rw-border-radius); }
+::-webkit-scrollbar-thumb:hover { background: var(--rw-accent-red); }
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track { background: var(--rw-ebony-light); }
+  ::-webkit-scrollbar-thumb { background: var(--rw-ebony-muted); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--rw-accent-red); }
+}
