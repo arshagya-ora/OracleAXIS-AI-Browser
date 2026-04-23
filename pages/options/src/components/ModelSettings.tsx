@@ -12,7 +12,6 @@ import { Button } from '@extension/ui';
 import {
   llmProviderStore,
   agentModelStore,
-  speechToTextModelStore,
   AgentNameEnum,
   llmProviderModelNames,
   ProviderTypeEnum,
@@ -57,6 +56,13 @@ interface ModelSettingsProps {
   isDarkMode?: boolean; // Controls dark/light theme styling
 }
 
+const ALLOWED_PROVIDER_TYPES = [
+  ProviderTypeEnum.OpenAI,
+  ProviderTypeEnum.Gemini,
+  ProviderTypeEnum.Ollama,
+  ProviderTypeEnum.Grok,
+];
+
 export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
   const [providers, setProviders] = useState<Record<string, ProviderConfig>>({});
   const [modifiedProviders, setModifiedProviders] = useState<Set<string>>(new Set());
@@ -88,8 +94,6 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
     Array<{ provider: string; providerName: string; model: string }>
   >([]);
   // State for model input handling
-
-  const [selectedSpeechToTextModel, setSelectedSpeechToTextModel] = useState<string>('');
 
   useEffect(() => {
     const loadProviders = async () => {
@@ -154,21 +158,6 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
     };
 
     loadAgentModels();
-  }, []);
-
-  useEffect(() => {
-    const loadSpeechToTextModel = async () => {
-      try {
-        const config = await speechToTextModelStore.getSpeechToTextModel();
-        if (config) {
-          setSelectedSpeechToTextModel(`${config.provider}>${config.modelName}`);
-        }
-      } catch (error) {
-        console.error('Error loading speech-to-text model:', error);
-      }
-    };
-
-    loadSpeechToTextModel();
   }, []);
 
   // Auto-focus the input field when a new provider is added
@@ -685,28 +674,6 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
       } catch (error) {
         console.error('Error saving agent parameters:', error);
       }
-    }
-  };
-
-  const handleSpeechToTextModelChange = async (modelValue: string) => {
-    setSelectedSpeechToTextModel(modelValue);
-
-    try {
-      if (modelValue) {
-        // Parse the "provider>model" format
-        const [provider, modelName] = modelValue.split('>');
-
-        // Save to proper storage
-        await speechToTextModelStore.setSpeechToTextModel({
-          provider,
-          modelName,
-        });
-      } else {
-        // Reset if no model selected
-        await speechToTextModelStore.resetSpeechToTextModel();
-      }
-    } catch (error) {
-      console.error('Error saving speech-to-text model:', error);
     }
   };
 
@@ -1580,15 +1547,9 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                 }`}>
                 <div className="py-1">
                   {/* Map through provider types to create buttons */}
-                  {Object.values(ProviderTypeEnum)
-                    // Allow Azure to appear multiple times, but filter out other already added providers
-                    .filter(
-                      type =>
-                        type === ProviderTypeEnum.AzureOpenAI || // Always show Azure
-                        (type !== ProviderTypeEnum.CustomOpenAI &&
-                          !providersFromStorage.has(type) &&
-                          !modifiedProviders.has(type)),
-                    )
+                  {ALLOWED_PROVIDER_TYPES.filter(
+                    type => !providersFromStorage.has(type) && !modifiedProviders.has(type),
+                  )
                     .map(type => (
                       <button
                         key={type}
@@ -1602,18 +1563,6 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                         <span className="font-medium">{getDefaultDisplayNameFromProviderId(type)}</span>
                       </button>
                     ))}
-
-                  {/* Custom provider button (always shown) */}
-                  <button
-                    type="button"
-                    className={`flex w-full items-center px-4 py-3 text-left text-sm ${
-                      isDarkMode
-                        ? 'text-[#D4CFC9] hover:bg-[#4A4644] hover:text-white'
-                        : 'text-[#2D2B29] hover:bg-[#F8F7F3] hover:text-[#C74634]'
-                    } transition-colors duration-150`}
-                    onClick={() => handleProviderSelection(ProviderTypeEnum.CustomOpenAI)}>
-                    <span className="font-medium">{t('options_models_providers_openaiCompatible')}</span>
-                  </button>
                 </div>
               </div>
             )}
@@ -1634,45 +1583,6 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
         </div>
       </div>
 
-      {/* Speech-to-Text Model Selection */}
-      <div
-        className={`rounded border ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-white'} p-6 text-left shadow-sm`}>
-        <h2 className={`mb-4 text-left text-xl font-semibold ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
-          {t('options_models_speechToText_header')}
-        </h2>
-        <p className={`mb-4 text-sm ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>
-          {t('options_models_stt_desc')}
-        </p>
-
-        <div
-          className={`rounded border ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-[#F8F7F3]'} p-4`}>
-          <div className="flex items-center">
-            <label
-              htmlFor="speech-to-text-model"
-              className={`w-24 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
-              {t('options_models_labels_model')}
-            </label>
-            <select
-              id="speech-to-text-model"
-              className={`flex-1 rounded border text-sm ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836] text-[#D4CFC9]' : 'border-[#E0DDD5] bg-white text-[#2D2B29]'} px-3 py-2`}
-              value={selectedSpeechToTextModel}
-              onChange={e => handleSpeechToTextModelChange(e.target.value)}>
-              <option value="">{t('options_models_chooseModel')}</option>
-              {/* Filter available models to show only Gemini models */}
-              {availableModels
-                .filter(({ provider }) => {
-                  const providerConfig = providers[provider];
-                  return providerConfig?.type === ProviderTypeEnum.Gemini;
-                })
-                .map(({ provider, providerName, model }) => (
-                  <option key={`${provider}>${model}`} value={`${provider}>${model}`}>
-                    {`${providerName} > ${model}`}
-                  </option>
-                ))}
-            </select>
-          </div>
-        </div>
-      </div>
     </section>
   );
 };

@@ -70,17 +70,6 @@ export const GeneralSettings = ({ isDarkMode = false }: GeneralSettingsProps) =>
           </div>
 
           <div className="flex items-center justify-between py-4">
-            {rowLabel(t('options_general_enableVision'), t('options_general_enableVision_desc'))}
-            <div className="relative inline-flex cursor-pointer items-center">
-              <input id="useVision" type="checkbox" checked={settings.useVision}
-                onChange={e => updateSetting('useVision', e.target.checked)} className="peer sr-only" />
-              <label htmlFor="useVision" className={toggleCls(isDarkMode)}>
-                <span className="sr-only">{t('options_general_enableVision')}</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between py-4">
             {rowLabel(t('options_general_displayHighlights'), t('options_general_displayHighlights_desc'))}
             <div className="relative inline-flex cursor-pointer items-center">
               <input id="displayHighlights" type="checkbox" checked={settings.displayHighlights}
