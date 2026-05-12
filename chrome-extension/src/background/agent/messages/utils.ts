@@ -144,12 +144,6 @@ export function convertInputMessages(inputMessages: BaseMessage[], modelName: st
   if (modelName === null) {
     return inputMessages;
   }
-  if (modelName === 'deepseek-reasoner' || modelName.includes('deepseek-r1')) {
-    const convertedInputMessages = convertMessagesForNonFunctionCallingModels(inputMessages);
-    let mergedInputMessages = mergeSuccessiveMessages(convertedInputMessages, HumanMessage);
-    mergedInputMessages = mergeSuccessiveMessages(mergedInputMessages, AIMessage);
-    return mergedInputMessages;
-  }
   return inputMessages;
 }
 

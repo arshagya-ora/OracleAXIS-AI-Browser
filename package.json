@@ -2,7 +2,6 @@
   "name": "oracle-axis",
   "version": "0.1.13",
   "description": "AI web automation tool",
-  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/oracle-axis/oracle-axis.git"
@@ -16,7 +15,7 @@
     "clean:install": "pnpm clean:node_modules && pnpm install --frozen-lockfile",
     "build": "pnpm clean:bundle && turbo ready && turbo build",
     "zip": "pnpm build && pnpm -F zipper zip",
-    "dev": "turbo ready && cross-env __DEV__=true turbo run dev --concurrency 20",
+    "dev": "turbo ready && cross-env __DEV__=true turbo watch dev --concurrency 20",
     "e2e": "pnpm build && pnpm zip && turbo e2e",
     "type-check": "turbo type-check",
     "lint": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",

@@ -1,7 +1,7 @@
 import { StorageEnum } from '../base/enums';
 import { createStorage } from '../base/base';
 import type { BaseStorage } from '../base/types';
-import { AgentNameEnum, llmProviderParameters } from './types';
+import { AgentNameEnum, type ReasoningEffort, llmProviderParameters } from './types';
 
 // Interface for a single model configuration
 export interface ModelConfig {
@@ -9,7 +9,7 @@ export interface ModelConfig {
   provider: string;
   modelName: string;
   parameters?: Record<string, unknown>;
-  reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high'; // For o-series models (OpenAI and Azure)
+  reasoningEffort?: ReasoningEffort; // For reasoning-capable models
 }
 
 // Interface for storing multiple agent model configurations

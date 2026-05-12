@@ -115,12 +115,6 @@ export const STRICT_PATTERNS: SecurityPattern[] = [
     replacement: '[REDACTED_CREDENTIAL]',
   },
   {
-    pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, // Email
-    type: ThreatType.SENSITIVE_DATA,
-    description: 'Email address detected',
-    replacement: '[EMAIL]',
-  },
-  {
     pattern: /\b(bypass|circumvent|avoid|skip)[\s\-_]*(security|safety|filter|check)/gi,
     type: ThreatType.PROMPT_INJECTION,
     description: 'Security bypass attempt',

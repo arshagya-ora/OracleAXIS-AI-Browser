@@ -960,4 +960,68 @@
       }
     }
   }
+,
+  "options_models_codex_header": {
+    "message": "Codex Import"
+  },
+  "options_models_codex_description": {
+    "message": "Import Oracle Code Assist settings from Codex config.toml and auth.json without changing existing providers."
+  },
+  "options_models_codex_files": {
+    "message": "Files"
+  },
+  "options_models_codex_importButton": {
+    "message": "Import from Codex"
+  },
+  "options_models_codex_reimportButton": {
+    "message": "Re-import from Codex"
+  },
+  "options_models_codex_selectHint": {
+    "message": "Select .codex/config.toml first, then .codex/auth.json."
+  },
+  "options_models_codex_previewTitle": {
+    "message": "Import Preview"
+  },
+  "options_models_codex_confirmImport": {
+    "message": "Confirm Import"
+  },
+  "options_models_codex_provider": {
+    "message": "Provider"
+  },
+  "options_models_codex_providerKey": {
+    "message": "Provider Key"
+  },
+  "options_models_codex_defaultModel": {
+    "message": "Default Model"
+  },
+  "options_models_codex_profile": {
+    "message": "Profile"
+  },
+  "options_models_codex_reasoning": {
+    "message": "Reasoning"
+  },
+  "options_models_codex_wireApi": {
+    "message": "Wire API"
+  },
+  "options_models_codex_baseUrl": {
+    "message": "Base URL"
+  },
+  "options_models_codex_auth": {
+    "message": "Auth"
+  },
+  "options_models_codex_authStored": {
+    "message": "API key loaded from auth.json"
+  },
+  "options_models_codex_availableModels": {
+    "message": "Available Models"
+  },
+  "options_models_codex_none": {
+    "message": "None"
+  },
+  "options_models_codex_importedNote": {
+    "message": "Imported from Codex. Re-import to sync config changes."
+  },
+  "options_models_codex_readOnly": {
+    "message": "This provider is managed by Codex import and cannot be edited here."
+  }
 }

@@ -103,15 +103,20 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
     return modelName.includes('Llama-4') || modelName.includes('Llama-3.3') || modelName.includes('llama-3.3');
   }
 
+  private isOcaCodexResponsesModel(): boolean {
+    return this.chatModelLibrary === 'OcaResponsesChatModel' || this.modelName.startsWith('oca/');
+  }
+
   // Set whether to use structured output based on the model name
   private setWithStructuredOutput(): boolean {
-    if (this.modelName === 'deepseek-reasoner' || this.modelName === 'deepseek-r1') {
-      return false;
-    }
-
     // Llama API models don't support json_schema response format
     if (this.provider === ProviderTypeEnum.Llama || this.isLlamaModel(this.modelName)) {
       logger.debug(`[${this.modelName}] Llama API doesn't support structured output, using manual JSON extraction`);
+      return false;
+    }
+
+    if (this.isOcaCodexResponsesModel()) {
+      logger.debug(`[${this.modelName}] OCA/Codex responses adapter uses manual JSON extraction`);
       return false;
     }
 

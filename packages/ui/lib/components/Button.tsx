@@ -14,10 +14,7 @@ export function Button({ theme, variant = 'primary', className, disabled, childr
         'py-1 px-4 rounded transition-all',
         {
           // Primary — Oracle Red
-          'bg-[#C74634] hover:bg-[#9E3929] text-white':
-            variant === 'primary' && !disabled && theme !== 'dark',
-          'bg-[#C74634] hover:bg-[#9E3929] text-white':
-            variant === 'primary' && !disabled && theme === 'dark',
+          'bg-[#C74634] hover:bg-[#9E3929] text-white': variant === 'primary' && !disabled,
           'bg-[#E0DDD5] text-[#A09A94] cursor-not-allowed': variant === 'primary' && disabled,
 
           // Secondary — warm neutral

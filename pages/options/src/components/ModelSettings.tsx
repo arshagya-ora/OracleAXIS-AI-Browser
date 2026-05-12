@@ -7,49 +7,77 @@
  * - Styling for both light and dark mode themes
  */
 import { useEffect, useState, useRef, useCallback } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { ChangeEvent, KeyboardEvent } from 'react';
 import { Button } from '@extension/ui';
 import {
+  CODEX_OCA_PROVIDER_ID,
   llmProviderStore,
   agentModelStore,
   AgentNameEnum,
   llmProviderModelNames,
   ProviderTypeEnum,
+  applyCodexImport,
+  createCodexImportPreview,
   getDefaultDisplayNameFromProviderId,
   getDefaultProviderConfig,
   getDefaultAgentModelParams,
+  isOpenAIReasoningModelName,
+  normalizeReasoningEffort,
+  type CodexImportPreview,
   type ProviderConfig,
+  type ReasoningEffort,
 } from '@extension/storage';
 import { t } from '@extension/i18n';
 
-// Helper function to check if a model is an OpenAI reasoning model (O-series or GPT-5 models)
 function isOpenAIReasoningModel(modelName: string): boolean {
-  // Extract the model name without provider prefix if present
-  let modelNameWithoutProvider = modelName;
-  if (modelName.includes('>')) {
-    // Handle "provider>model" format
-    modelNameWithoutProvider = modelName.split('>')[1];
-  }
-  if (modelNameWithoutProvider.startsWith('openai/')) {
-    modelNameWithoutProvider = modelNameWithoutProvider.substring(7);
-  }
-  return (
-    modelNameWithoutProvider.startsWith('o') ||
-    (modelNameWithoutProvider.startsWith('gpt-5') && !modelNameWithoutProvider.startsWith('gpt-5-chat'))
-  );
+  return isOpenAIReasoningModelName(modelName);
 }
 
-function isAnthropicModel(modelName: string): boolean {
-  // Extract the model name without provider prefix if present
-  let modelNameWithoutProvider = modelName;
+function isCodexImportedProviderModel(modelValue: string): boolean {
+  return modelValue.startsWith(`${CODEX_OCA_PROVIDER_ID}>`);
+}
 
-  if (modelName.includes('>')) {
-    // Handle "provider>model" format
-    modelNameWithoutProvider = modelName.split('>')[1];
+function isCodexImportedProvider(providerId: string, providerConfig: ProviderConfig): boolean {
+  return providerId === CODEX_OCA_PROVIDER_ID || providerConfig.type === ProviderTypeEnum.OcaCodex;
+}
+
+function getDefaultReasoningEffort(agentName: AgentNameEnum, modelValue: string): ReasoningEffort {
+  if (isCodexImportedProviderModel(modelValue)) {
+    return 'xhigh';
   }
 
-  // Check if the model starts with 'claude-'
-  return modelNameWithoutProvider.startsWith('claude-');
+  return agentName === AgentNameEnum.Planner ? 'low' : 'minimal';
+}
+
+function getReasoningOptions(modelValue: string): ReasoningEffort[] {
+  const options: ReasoningEffort[] = ['minimal', 'low', 'medium', 'high'];
+  if (isCodexImportedProviderModel(modelValue)) {
+    return [...options, 'xhigh'];
+  }
+  return options;
+}
+
+function formatReasoningEffortLabel(value: ReasoningEffort): string {
+  if (value === 'xhigh') {
+    return 'X-High';
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function getEffectiveReasoningEffort(
+  agentName: AgentNameEnum,
+  modelValue: string,
+  currentValue?: ReasoningEffort,
+): ReasoningEffort {
+  const normalizedCurrentValue = normalizeReasoningEffort(currentValue);
+  const availableOptions = getReasoningOptions(modelValue);
+
+  if (normalizedCurrentValue && availableOptions.includes(normalizedCurrentValue)) {
+    return normalizedCurrentValue;
+  }
+
+  return getDefaultReasoningEffort(agentName, modelValue);
 }
 
 interface ModelSettingsProps {
@@ -61,6 +89,10 @@ const ALLOWED_PROVIDER_TYPES = [
   ProviderTypeEnum.Gemini,
   ProviderTypeEnum.Ollama,
   ProviderTypeEnum.Grok,
+  ProviderTypeEnum.Groq,
+  ProviderTypeEnum.OpenRouter,
+  ProviderTypeEnum.Llama,
+  ProviderTypeEnum.CustomOpenAI,
 ];
 
 export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
@@ -77,15 +109,16 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
   });
 
   // State for reasoning effort for O-series models
-  const [reasoningEffort, setReasoningEffort] = useState<
-    Record<AgentNameEnum, 'minimal' | 'low' | 'medium' | 'high' | undefined>
-  >({
+  const [reasoningEffort, setReasoningEffort] = useState<Record<AgentNameEnum, ReasoningEffort | undefined>>({
     [AgentNameEnum.Navigator]: undefined,
     [AgentNameEnum.Planner]: undefined,
   });
   const [newModelInputs, setNewModelInputs] = useState<Record<string, string>>({});
   const [isProviderSelectorOpen, setIsProviderSelectorOpen] = useState(false);
   const newlyAddedProviderRef = useRef<string | null>(null);
+  const codexConfigInputRef = useRef<HTMLInputElement | null>(null);
+  const codexAuthInputRef = useRef<HTMLInputElement | null>(null);
+  const pendingCodexConfigFileRef = useRef<File | null>(null);
   const [nameErrors, setNameErrors] = useState<Record<string, string>>({});
   // Add state for tracking API key visibility
   const [visibleApiKeys, setVisibleApiKeys] = useState<Record<string, boolean>>({});
@@ -93,72 +126,83 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
   const [availableModels, setAvailableModels] = useState<
     Array<{ provider: string; providerName: string; model: string }>
   >([]);
-  // State for model input handling
+  const [codexImportPreview, setCodexImportPreview] = useState<CodexImportPreview | null>(null);
+  const [codexImportError, setCodexImportError] = useState<string | null>(null);
+  const [codexImporting, setCodexImporting] = useState(false);
+  const [codexImportFileNames, setCodexImportFileNames] = useState<{ auth?: string; config?: string }>({});
 
-  useEffect(() => {
-    const loadProviders = async () => {
-      try {
-        const allProviders = await llmProviderStore.getAllProviders();
-        console.log('allProviders', allProviders);
+  const resetCodexImportState = useCallback(() => {
+    setCodexImportPreview(null);
+    setCodexImportError(null);
+    setCodexImportFileNames({});
+    pendingCodexConfigFileRef.current = null;
 
-        // Track which providers are from storage
-        const fromStorage = new Set(Object.keys(allProviders));
-        setProvidersFromStorage(fromStorage);
+    if (codexConfigInputRef.current) {
+      codexConfigInputRef.current.value = '';
+    }
 
-        // Only use providers from storage, don't add default ones
-        setProviders(allProviders);
-      } catch (error) {
-        console.error('Error loading providers:', error);
-        // Set empty providers on error
-        setProviders({});
-        // No providers from storage on error
-        setProvidersFromStorage(new Set());
-      }
-    };
-
-    loadProviders();
+    if (codexAuthInputRef.current) {
+      codexAuthInputRef.current.value = '';
+    }
   }, []);
 
-  // Load existing agent models and parameters on mount
-  useEffect(() => {
-    const loadAgentModels = async () => {
-      try {
-        const models: Record<AgentNameEnum, string> = {
-          [AgentNameEnum.Planner]: '',
-          [AgentNameEnum.Navigator]: '',
-        };
+  const refreshProviders = useCallback(async () => {
+    try {
+      const allProviders = await llmProviderStore.getAllProviders();
 
-        for (const agent of Object.values(AgentNameEnum)) {
-          const config = await agentModelStore.getAgentModel(agent);
-          if (config) {
-            // Store in provider>model format
-            models[agent] = `${config.provider}>${config.modelName}`;
-            if (config.parameters?.temperature !== undefined || config.parameters?.topP !== undefined) {
-              setModelParameters(prev => ({
-                ...prev,
-                [agent]: {
-                  temperature: config.parameters?.temperature ?? prev[agent].temperature,
-                  topP: config.parameters?.topP ?? prev[agent].topP,
-                },
-              }));
-            }
-            // Also load reasoningEffort if available
-            if (config.reasoningEffort) {
-              setReasoningEffort(prev => ({
-                ...prev,
-                [agent]: config.reasoningEffort as 'minimal' | 'low' | 'medium' | 'high',
-              }));
-            }
-          }
+      setProvidersFromStorage(new Set(Object.keys(allProviders)));
+      setProviders(allProviders);
+    } catch (error) {
+      console.error('Error loading providers:', error);
+      setProviders({});
+      setProvidersFromStorage(new Set());
+    }
+  }, []);
+
+  const refreshAgentModels = useCallback(async () => {
+    try {
+      const models: Record<AgentNameEnum, string> = {
+        [AgentNameEnum.Planner]: '',
+        [AgentNameEnum.Navigator]: '',
+      };
+      const nextParameters: Record<AgentNameEnum, { temperature: number; topP: number }> = {
+        [AgentNameEnum.Navigator]: { temperature: 0, topP: 0 },
+        [AgentNameEnum.Planner]: { temperature: 0, topP: 0 },
+      };
+      const nextReasoningEffort: Record<AgentNameEnum, ReasoningEffort | undefined> = {
+        [AgentNameEnum.Navigator]: undefined,
+        [AgentNameEnum.Planner]: undefined,
+      };
+
+      for (const agent of Object.values(AgentNameEnum)) {
+        const config = await agentModelStore.getAgentModel(agent);
+        if (!config) {
+          continue;
         }
-        setSelectedModels(models);
-      } catch (error) {
-        console.error('Error loading agent models:', error);
-      }
-    };
 
-    loadAgentModels();
+        models[agent] = `${config.provider}>${config.modelName}`;
+        nextParameters[agent] = {
+          temperature: (config.parameters?.temperature ?? nextParameters[agent].temperature) as number,
+          topP: (config.parameters?.topP ?? nextParameters[agent].topP) as number,
+        };
+        nextReasoningEffort[agent] = normalizeReasoningEffort(config.reasoningEffort);
+      }
+
+      setSelectedModels(models);
+      setModelParameters(nextParameters);
+      setReasoningEffort(nextReasoningEffort);
+    } catch (error) {
+      console.error('Error loading agent models:', error);
+    }
   }, []);
+
+  useEffect(() => {
+    refreshProviders();
+  }, [refreshProviders]);
+
+  useEffect(() => {
+    refreshAgentModels();
+  }, [refreshAgentModels]);
 
   // Auto-focus the input field when a new provider is added
   useEffect(() => {
@@ -211,29 +255,15 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
 
       // Only use providers that are actually in storage
       for (const [provider, config] of Object.entries(storedProviders)) {
-        if (config.type === ProviderTypeEnum.AzureOpenAI) {
-          // Handle Azure providers specially - use deployment names as models
-          const deploymentNames = config.azureDeploymentNames || [];
-
-          models.push(
-            ...deploymentNames.map(deployment => ({
-              provider,
-              providerName: config.name || provider,
-              model: deployment,
-            })),
-          );
-        } else {
-          // Standard handling for non-Azure providers
-          const providerModels =
-            config.modelNames || llmProviderModelNames[provider as keyof typeof llmProviderModelNames] || [];
-          models.push(
-            ...providerModels.map(model => ({
-              provider,
-              providerName: config.name || provider,
-              model,
-            })),
-          );
-        }
+        const providerModels =
+          config.modelNames || llmProviderModelNames[provider as keyof typeof llmProviderModelNames] || [];
+        models.push(
+          ...providerModels.map(model => ({
+            provider,
+            providerName: config.name || provider,
+            model,
+          })),
+        );
       }
     } catch (error) {
       console.error('Error loading providers for model selection:', error);
@@ -250,7 +280,83 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
     };
 
     updateAvailableModels();
-  }, [getAvailableModelsCallback]); // Only depends on the callback
+  }, [getAvailableModelsCallback, providers]);
+
+  const handleCodexImportStart = () => {
+    resetCodexImportState();
+
+    if (codexConfigInputRef.current) {
+      codexConfigInputRef.current.click();
+    }
+  };
+
+  const handleCodexConfigFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const configFile = event.target.files?.[0];
+    if (!configFile) {
+      return;
+    }
+
+    pendingCodexConfigFileRef.current = configFile;
+    setCodexImportFileNames(prev => ({
+      ...prev,
+      config: configFile.name,
+    }));
+
+    if (codexAuthInputRef.current) {
+      codexAuthInputRef.current.value = '';
+      codexAuthInputRef.current.click();
+    }
+  };
+
+  const handleCodexAuthFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const authFile = event.target.files?.[0];
+    const configFile = pendingCodexConfigFileRef.current;
+
+    if (!authFile || !configFile) {
+      return;
+    }
+
+    setCodexImporting(true);
+    try {
+      const [configText, authText] = await Promise.all([configFile.text(), authFile.text()]);
+      const preview = createCodexImportPreview(configText, authText);
+      setCodexImportPreview(preview);
+      setCodexImportError(null);
+      setCodexImportFileNames({
+        auth: authFile.name,
+        config: configFile.name,
+      });
+    } catch (error) {
+      setCodexImportPreview(null);
+      setCodexImportError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCodexImporting(false);
+    }
+  };
+
+  const handleConfirmCodexImport = async () => {
+    if (!codexImportPreview) {
+      return;
+    }
+
+    setCodexImporting(true);
+    try {
+      await applyCodexImport(codexImportPreview);
+      await Promise.all([refreshProviders(), refreshAgentModels()]);
+
+      const models = await getAvailableModelsCallback();
+      setAvailableModels(models);
+      resetCodexImportState();
+    } catch (error) {
+      setCodexImportError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCodexImporting(false);
+    }
+  };
+
+  const handleCancelCodexImport = () => {
+    resetCodexImportState();
+  };
 
   const handleApiKeyChange = (provider: string, apiKey: string, baseUrl?: string) => {
     setModifiedProviders(prev => new Set(prev).add(provider));
@@ -388,13 +494,6 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
       hasInput = Boolean(config?.baseUrl?.trim()); // Custom needs Base URL, name checked elsewhere
     } else if (providerType === ProviderTypeEnum.Ollama) {
       hasInput = Boolean(config?.baseUrl?.trim()); // Ollama needs Base URL
-    } else if (providerType === ProviderTypeEnum.AzureOpenAI) {
-      // Azure needs API Key, Endpoint, Deployment Names, and API Version
-      hasInput =
-        Boolean(config?.apiKey?.trim()) &&
-        Boolean(config?.baseUrl?.trim()) &&
-        Boolean(config?.azureDeploymentNames?.length) &&
-        Boolean(config?.azureApiVersion?.trim());
     } else if (providerType === ProviderTypeEnum.OpenRouter) {
       // OpenRouter needs API Key and optionally Base URL (has default)
       hasInput = Boolean(config?.apiKey?.trim()) && Boolean(config?.baseUrl?.trim());
@@ -425,12 +524,10 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
         return;
       }
 
-      // Check if base URL is required but missing for custom_openai, ollama, azure_openai or openrouter
-      // Note: Groq and Cerebras do not require base URL as they use the default endpoint
+      // Check if base URL is required but missing for custom_openai, ollama, openrouter, or llama
       if (
         (providers[provider].type === ProviderTypeEnum.CustomOpenAI ||
           providers[provider].type === ProviderTypeEnum.Ollama ||
-          providers[provider].type === ProviderTypeEnum.AzureOpenAI ||
           providers[provider].type === ProviderTypeEnum.OpenRouter ||
           providers[provider].type === ProviderTypeEnum.Llama) &&
         (!providers[provider].baseUrl || !providers[provider].baseUrl.trim())
@@ -458,15 +555,8 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
       configToSave.createdAt = providers[provider].createdAt || Date.now();
       // baseUrl, azureDeploymentName, azureApiVersion should be correctly set by handlers
 
-      if (providers[provider].type === ProviderTypeEnum.AzureOpenAI) {
-        // Ensure modelNames is NOT included for Azure
-        configToSave.modelNames = undefined;
-      } else {
-        // Ensure modelNames IS included for non-Azure
-        // Use existing modelNames from state, or default if somehow missing
-        configToSave.modelNames =
-          providers[provider].modelNames || llmProviderModelNames[provider as keyof typeof llmProviderModelNames] || [];
-      }
+      configToSave.modelNames =
+        providers[provider].modelNames || llmProviderModelNames[provider as keyof typeof llmProviderModelNames] || [];
 
       // Pass the cleaned config to setProvider
       // Cast to ProviderConfig as we've ensured necessary fields based on type
@@ -550,8 +640,6 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
     // modelValue will be in format "provider>model"
     const [provider, model] = modelValue.split('>');
 
-    console.log(`[handleModelChange] Setting ${agentName} model: provider=${provider}, model=${model}`);
-
     // Set parameters based on provider type
     const newParameters = getDefaultAgentModelParams(provider, agentName);
 
@@ -568,43 +656,28 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
 
     try {
       if (model) {
-        const providerConfig = providers[provider];
-
-        // For Azure, verify the model is in the deployment names list
-        if (providerConfig && providerConfig.type === ProviderTypeEnum.AzureOpenAI) {
-          console.log(`[handleModelChange] Azure model selected: ${model}`);
-        }
+        const nextReasoningEffort = isOpenAIReasoningModel(modelValue)
+          ? getEffectiveReasoningEffort(agentName, modelValue, reasoningEffort[agentName])
+          : undefined;
 
         // Reset reasoning effort if switching models
-        if (isOpenAIReasoningModel(modelValue)) {
-          // Set default reasoning effort based on agent type
-          const defaultReasoningEffort = agentName === AgentNameEnum.Planner ? 'low' : 'minimal';
-          setReasoningEffort(prev => ({
-            ...prev,
-            [agentName]: prev[agentName] || defaultReasoningEffort,
-          }));
-        } else {
-          // Clear reasoning effort for non-O-series models
-          setReasoningEffort(prev => ({
-            ...prev,
-            [agentName]: undefined,
-          }));
-        }
-
-        // For Anthropic Opus models, only pass temperature, not topP
-        const parametersToSave = isAnthropicModel(modelValue)
-          ? { temperature: newParameters.temperature }
-          : newParameters;
+        setReasoningEffort(prev => ({
+          ...prev,
+          [agentName]: nextReasoningEffort,
+        }));
 
         await agentModelStore.setAgentModel(agentName, {
           provider,
           modelName: model,
-          parameters: parametersToSave,
-          reasoningEffort: isOpenAIReasoningModel(modelValue)
-            ? reasoningEffort[agentName] || (agentName === AgentNameEnum.Planner ? 'low' : 'minimal')
-            : undefined,
+          parameters: newParameters,
+          reasoningEffort: nextReasoningEffort,
         });
       } else {
+        setReasoningEffort(prev => ({
+          ...prev,
+          [agentName]: undefined,
+        }));
+
         // Reset storage if no model is selected
         await agentModelStore.resetAgentModel(agentName);
       }
@@ -615,11 +688,16 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
 
   const handleReasoningEffortChange = async (
     agentName: AgentNameEnum,
-    value: 'minimal' | 'low' | 'medium' | 'high',
+    value: ReasoningEffort,
   ) => {
+    const normalizedValue = normalizeReasoningEffort(value);
+    if (!normalizedValue) {
+      return;
+    }
+
     setReasoningEffort(prev => ({
       ...prev,
-      [agentName]: value,
+      [agentName]: normalizedValue,
     }));
 
     // Only update if we have a selected model
@@ -633,7 +711,7 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
             provider,
             modelName,
             parameters: modelParameters[agentName],
-            reasoningEffort: value,
+            reasoningEffort: normalizedValue,
           });
         }
       } catch (error) {
@@ -660,15 +738,10 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
         const [provider, modelName] = selectedModels[agentName].split('>');
 
         if (provider && modelName) {
-          // For Anthropic Opus models, only pass temperature, not topP
-          const parametersToSave = isAnthropicModel(selectedModels[agentName])
-            ? { temperature: newParameters.temperature }
-            : newParameters;
-
           await agentModelStore.setAgentModel(agentName, {
             provider,
             modelName,
-            parameters: parametersToSave,
+            parameters: newParameters,
           });
         }
       } catch (error) {
@@ -760,8 +833,7 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
 
         {/* Top P Slider - Only show for non-reasoning models */}
         {selectedModels[agentName] &&
-          !isOpenAIReasoningModel(selectedModels[agentName]) &&
-          !isAnthropicModel(selectedModels[agentName]) && (
+          !isOpenAIReasoningModel(selectedModels[agentName]) && (
             <div className="flex items-center">
               <label
                 htmlFor={`${agentName}-topP`}
@@ -817,15 +889,14 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
             <div className="flex flex-1 items-center space-x-2">
               <select
                 id={`${agentName}-reasoning-effort`}
-                value={reasoningEffort[agentName] || (agentName === AgentNameEnum.Planner ? 'low' : 'minimal')}
-                onChange={e =>
-                  handleReasoningEffortChange(agentName, e.target.value as 'minimal' | 'low' | 'medium' | 'high')
-                }
+                value={getEffectiveReasoningEffort(agentName, selectedModels[agentName], reasoningEffort[agentName])}
+                onChange={e => handleReasoningEffortChange(agentName, e.target.value as ReasoningEffort)}
                 className={`flex-1 rounded border text-sm ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836] text-[#D4CFC9]' : 'border-[#E0DDD5] bg-white text-[#2D2B29]'} px-3 py-2`}>
-                <option value="minimal/none">Minimal</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+                {getReasoningOptions(selectedModels[agentName]).map(option => (
+                  <option key={option} value={option}>
+                    {formatReasoningEffortLabel(option)}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -984,112 +1055,11 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
       return;
     }
 
-    // Handle Azure OpenAI specially to allow multiple instances
-    if (providerType === ProviderTypeEnum.AzureOpenAI) {
-      addAzureProvider();
-      return;
-    }
-
     // Handle built-in supported providers
     addBuiltInProvider(providerType);
   };
 
-  // New function to add Azure providers with unique IDs
-  const addAzureProvider = () => {
-    // Count existing Azure providers
-    const azureProviders = Object.keys(providers).filter(
-      key => key === ProviderTypeEnum.AzureOpenAI || key.startsWith(`${ProviderTypeEnum.AzureOpenAI}_`),
-    );
-    const nextNumber = azureProviders.length + 1;
-
-    // Create unique ID
-    const providerId =
-      nextNumber === 1 ? ProviderTypeEnum.AzureOpenAI : `${ProviderTypeEnum.AzureOpenAI}_${nextNumber}`;
-
-    // Create config with appropriate name
-    const config = getDefaultProviderConfig(ProviderTypeEnum.AzureOpenAI);
-    config.name = `Azure OpenAI ${nextNumber}`;
-
-    // Add to providers
-    setProviders(prev => ({
-      ...prev,
-      [providerId]: config,
-    }));
-
-    setModifiedProviders(prev => new Set(prev).add(providerId));
-    newlyAddedProviderRef.current = providerId;
-
-    // Scroll to the newly added provider after render
-    setTimeout(() => {
-      const providerElement = document.getElementById(`provider-${providerId}`);
-      if (providerElement) {
-        providerElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  };
-
-  // Add and remove Azure deployments
-  const addAzureDeployment = (provider: string, deploymentName: string) => {
-    if (!deploymentName.trim()) return;
-
-    setModifiedProviders(prev => new Set(prev).add(provider));
-    setProviders(prev => {
-      const providerData = prev[provider] || {};
-
-      // Initialize or use existing deploymentNames array
-      const deploymentNames = providerData.azureDeploymentNames || [];
-
-      // Don't add duplicates
-      if (deploymentNames.includes(deploymentName.trim())) return prev;
-
-      return {
-        ...prev,
-        [provider]: {
-          ...providerData,
-          azureDeploymentNames: [...deploymentNames, deploymentName.trim()],
-        },
-      };
-    });
-
-    // Clear the input
-    setNewModelInputs(prev => ({
-      ...prev,
-      [provider]: '',
-    }));
-  };
-
-  const removeAzureDeployment = (provider: string, deploymentToRemove: string) => {
-    setModifiedProviders(prev => new Set(prev).add(provider));
-
-    setProviders(prev => {
-      const providerData = prev[provider] || {};
-
-      // Get current deployments
-      const deploymentNames = providerData.azureDeploymentNames || [];
-
-      // Filter out the deployment to remove
-      const filteredDeployments = deploymentNames.filter(name => name !== deploymentToRemove);
-
-      return {
-        ...prev,
-        [provider]: {
-          ...providerData,
-          azureDeploymentNames: filteredDeployments,
-        },
-      };
-    });
-  };
-
-  const handleAzureApiVersionChange = (provider: string, apiVersion: string) => {
-    setModifiedProviders(prev => new Set(prev).add(provider));
-    setProviders(prev => ({
-      ...prev,
-      [provider]: {
-        ...prev[provider],
-        azureApiVersion: apiVersion.trim(),
-      },
-    }));
-  };
+  const hasImportedCodexProvider = Boolean(providers[CODEX_OCA_PROVIDER_ID]);
 
   return (
     <section className="space-y-6">
@@ -1100,6 +1070,172 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
           {t('options_models_providers_header')}
         </h2>
         <div className="space-y-6">
+          <input
+            ref={codexConfigInputRef}
+            type="file"
+            accept=".toml,text/plain"
+            className="hidden"
+            onChange={handleCodexConfigFileChange}
+          />
+          <input
+            ref={codexAuthInputRef}
+            type="file"
+            accept=".json,application/json,text/plain"
+            className="hidden"
+            onChange={handleCodexAuthFileChange}
+          />
+
+          <div
+            className={`rounded border ${isDarkMode ? 'border-[#4A4644] bg-[#2D2B29]' : 'border-[#E0DDD5] bg-[#F8F7F3]'} p-4`}>
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-1">
+                <h3 className={`text-lg font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                  {t('options_models_codex_header')}
+                </h3>
+                <p className={`text-sm ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                  {t('options_models_codex_description')}
+                </p>
+                {(codexImportFileNames.config || codexImportFileNames.auth) && (
+                  <p className={`text-xs ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                    {`${t('options_models_codex_files')}: ${codexImportFileNames.config || 'config.toml'} / ${
+                      codexImportFileNames.auth || 'auth.json'
+                    }`}
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="secondary"
+                disabled={codexImporting}
+                onClick={handleCodexImportStart}
+                className="whitespace-nowrap">
+                {hasImportedCodexProvider
+                  ? t('options_models_codex_reimportButton')
+                  : t('options_models_codex_importButton')}
+              </Button>
+            </div>
+
+            {!codexImportPreview && (
+              <p className={`mt-3 text-xs ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>
+                {t('options_models_codex_selectHint')}
+              </p>
+            )}
+
+            {codexImportError && (
+              <div
+                className={`mt-3 rounded border px-3 py-2 text-sm ${
+                  isDarkMode
+                    ? 'border-red-800 bg-red-950/40 text-red-200'
+                    : 'border-red-200 bg-red-50 text-red-700'
+                }`}>
+                {codexImportError}
+              </div>
+            )}
+
+            {codexImportPreview && (
+              <div
+                className={`mt-4 rounded border ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-white'} p-4`}>
+                <div className="flex items-center justify-between">
+                  <h4 className={`text-base font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                    {t('options_models_codex_previewTitle')}
+                  </h4>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" disabled={codexImporting} onClick={handleCancelCodexImport}>
+                      {t('options_models_providers_btnCancel')}
+                    </Button>
+                    <Button disabled={codexImporting} onClick={handleConfirmCodexImport}>
+                      {t('options_models_codex_confirmImport')}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div>
+                    <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                      {t('options_models_codex_provider')}
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                      {codexImportPreview.providerName}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                      {t('options_models_codex_providerKey')}
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                      {codexImportPreview.providerKey}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                      {t('options_models_codex_defaultModel')}
+                    </p>
+                    <p className={`break-all text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                      {codexImportPreview.modelName}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                      {t('options_models_codex_profile')}
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                      {codexImportPreview.activeProfile || t('options_models_codex_none')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                      {t('options_models_codex_reasoning')}
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                      {codexImportPreview.reasoningEffort
+                        ? formatReasoningEffortLabel(codexImportPreview.reasoningEffort)
+                        : t('options_models_codex_none')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                      {t('options_models_codex_wireApi')}
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                      {codexImportPreview.wireApi}
+                    </p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                      {t('options_models_codex_baseUrl')}
+                    </p>
+                    <p className={`break-all text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                      {codexImportPreview.baseUrl}
+                    </p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                      {t('options_models_codex_auth')}
+                    </p>
+                    <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                      {t('options_models_codex_authStored')}
+                    </p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                      {t('options_models_codex_availableModels')}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {codexImportPreview.modelNames.map(modelName => (
+                        <span
+                          key={modelName}
+                          className={`rounded-full px-2 py-1 text-sm ${
+                            isDarkMode ? 'bg-[#4A4644] text-[#D4CFC9]' : 'bg-[#FFF0EE] text-[#C74634]'
+                          }`}>
+                          {modelName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {getSortedProviders().length === 0 ? (
             <div className={`py-8 text-center ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>
               <p className="mb-4">{t('options_models_providers_notConfigured')}</p>
@@ -1112,34 +1248,116 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                 return null; // Skip rendering this item if config/type is somehow missing
               }
 
+              const isImportedProvider = isCodexImportedProvider(providerId, providerConfig);
+
               return (
                 <div
                   key={providerId}
                   id={`provider-${providerId}`}
                   className={`space-y-4 ${modifiedProviders.has(providerId) && !providersFromStorage.has(providerId) ? `rounded border p-4 ${isDarkMode ? 'border-[#C74634]/30 bg-[#C74634]/10' : 'border-[#C74634]/20 bg-[#FFF0EE]/70'}` : ''}`}>
-                  <div className="flex items-center justify-between">
-                    <h3 className={`text-lg font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
-                      {providerConfig.name || providerId}
-                    </h3>
-                    <div className="flex space-x-2">
-                      {/* Show Cancel button for newly added providers */}
-                      {modifiedProviders.has(providerId) && !providersFromStorage.has(providerId) && (
-                        <Button variant="secondary" onClick={() => handleCancelProvider(providerId)}>
-                          {t('options_models_providers_btnCancel')}
+                  {isImportedProvider && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className={`text-lg font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                            {providerConfig.name || providerId}
+                          </h3>
+                          <p className={`mt-1 text-sm ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                            {t('options_models_codex_importedNote')}
+                          </p>
+                        </div>
+                        <Button
+                          variant={getButtonProps(providerId).variant}
+                          disabled={getButtonProps(providerId).disabled}
+                          onClick={() => handleDelete(providerId)}>
+                          {getButtonProps(providerId).children}
                         </Button>
-                      )}
-                      <Button
-                        variant={getButtonProps(providerId).variant}
-                        disabled={getButtonProps(providerId).disabled}
-                        onClick={() =>
-                          providersFromStorage.has(providerId) && !modifiedProviders.has(providerId)
-                            ? handleDelete(providerId)
-                            : handleSave(providerId)
-                        }>
-                        {getButtonProps(providerId).children}
-                      </Button>
-                    </div>
-                  </div>
+                      </div>
+
+                      <div
+                        className={`rounded border ${isDarkMode ? 'border-[#4A4644] bg-[#2D2B29]' : 'border-[#E0DDD5] bg-[#F8F7F3]'} p-4`}>
+                        <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                          {t('options_models_codex_readOnly')}
+                        </p>
+                        <div className="mt-4 grid gap-3 md:grid-cols-2">
+                          <div>
+                            <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                              {t('options_models_codex_providerKey')}
+                            </p>
+                            <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                              {providerConfig.externalProviderKey || 'oca'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                              {t('options_models_codex_wireApi')}
+                            </p>
+                            <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                              {providerConfig.wireApi || 'responses'}
+                            </p>
+                          </div>
+                          <div className="md:col-span-2">
+                            <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                              {t('options_models_codex_baseUrl')}
+                            </p>
+                            <p className={`break-all text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                              {providerConfig.baseUrl || t('options_models_codex_none')}
+                            </p>
+                          </div>
+                          <div className="md:col-span-2">
+                            <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                              {t('options_models_codex_auth')}
+                            </p>
+                            <p className={`text-sm ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                              {t('options_models_codex_authStored')}
+                            </p>
+                          </div>
+                          <div className="md:col-span-2">
+                            <p className={`text-xs uppercase ${isDarkMode ? 'text-[#A09A94]' : 'text-[#6B6460]'}`}>
+                              {t('options_models_codex_availableModels')}
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {(providerConfig.modelNames || []).map(model => (
+                                <span
+                                  key={model}
+                                  className={`rounded-full px-2 py-1 text-sm ${
+                                    isDarkMode ? 'bg-[#4A4644] text-[#D4CFC9]' : 'bg-[#FFF0EE] text-[#C74634]'
+                                  }`}>
+                                  {model}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {!isImportedProvider && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <h3 className={`text-lg font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                          {providerConfig.name || providerId}
+                        </h3>
+                        <div className="flex space-x-2">
+                          {/* Show Cancel button for newly added providers */}
+                          {modifiedProviders.has(providerId) && !providersFromStorage.has(providerId) && (
+                            <Button variant="secondary" onClick={() => handleCancelProvider(providerId)}>
+                              {t('options_models_providers_btnCancel')}
+                            </Button>
+                          )}
+                          <Button
+                            variant={getButtonProps(providerId).variant}
+                            disabled={getButtonProps(providerId).disabled}
+                            onClick={() =>
+                              providersFromStorage.has(providerId) && !modifiedProviders.has(providerId)
+                                ? handleDelete(providerId)
+                                : handleSave(providerId)
+                            }>
+                            {getButtonProps(providerId).children}
+                          </Button>
+                        </div>
+                      </div>
 
                   {/* Show message for newly added providers */}
                   {modifiedProviders.has(providerId) && !providersFromStorage.has(providerId) && (
@@ -1163,10 +1381,7 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                             type="text"
                             placeholder={t('options_models_providers_custom_name_placeholder')}
                             value={providerConfig.name || ''}
-                            onChange={e => {
-                              console.log('Name input changed:', e.target.value);
-                              handleNameChange(providerId, e.target.value);
-                            }}
+                            onChange={e => handleNameChange(providerId, e.target.value)}
                             className={`flex-1 rounded border p-2 text-sm ${
                               nameErrors[providerId]
                                 ? isDarkMode
@@ -1276,10 +1491,9 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                         </div>
                       )}
 
-                    {/* Base URL input (for custom_openai, ollama, azure_openai, openrouter, and llama) */}
+                    {/* Base URL input (for custom_openai, ollama, openrouter, and llama) */}
                     {(providerConfig.type === ProviderTypeEnum.CustomOpenAI ||
                       providerConfig.type === ProviderTypeEnum.Ollama ||
-                      providerConfig.type === ProviderTypeEnum.AzureOpenAI ||
                       providerConfig.type === ProviderTypeEnum.OpenRouter ||
                       providerConfig.type === ProviderTypeEnum.Llama) && (
                       <div className="flex flex-col">
@@ -1287,16 +1501,8 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                           <label
                             htmlFor={`${providerId}-base-url`}
                             className={`w-20 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
-                            {/* Adjust Label based on provider */}
-                            {providerConfig.type === ProviderTypeEnum.AzureOpenAI
-                              ? t('options_models_providers_endpoint')
-                              : t('options_models_providers_baseUrl')}
-                            {/* Show asterisk only if required */}
-                            {/* OpenRouter has a default, so not strictly required, but needed for save button */}
-                            {providerConfig.type === ProviderTypeEnum.CustomOpenAI ||
-                            providerConfig.type === ProviderTypeEnum.AzureOpenAI
-                              ? '*'
-                              : ''}
+                            {t('options_models_providers_baseUrl')}
+                            {providerConfig.type === ProviderTypeEnum.CustomOpenAI ? '*' : ''}
                           </label>
                           <input
                             id={`${providerId}-base-url`}
@@ -1304,13 +1510,11 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                             placeholder={
                               providerConfig.type === ProviderTypeEnum.CustomOpenAI
                                 ? t('options_models_providers_placeholders_baseUrl_custom')
-                                : providerConfig.type === ProviderTypeEnum.AzureOpenAI
-                                  ? t('options_models_providers_placeholders_baseUrl_azure')
-                                  : providerConfig.type === ProviderTypeEnum.OpenRouter
-                                    ? t('options_models_providers_placeholders_baseUrl_openrouter')
-                                    : providerConfig.type === ProviderTypeEnum.Llama
-                                      ? t('options_models_providers_placeholders_baseUrl_llama')
-                                      : t('options_models_providers_placeholders_baseUrl_ollama')
+                                : providerConfig.type === ProviderTypeEnum.OpenRouter
+                                  ? t('options_models_providers_placeholders_baseUrl_openrouter')
+                                  : providerConfig.type === ProviderTypeEnum.Llama
+                                    ? t('options_models_providers_placeholders_baseUrl_llama')
+                                    : t('options_models_providers_placeholders_baseUrl_ollama')
                             }
                             value={providerConfig.baseUrl || ''}
                             onChange={e => handleApiKeyChange(providerId, providerConfig.apiKey || '', e.target.value)}
@@ -1320,86 +1524,8 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                       </div>
                     )}
 
-                    {/* Azure Deployment Name input as tags/chips like OpenRouter models */}
-                    {(providerConfig.type as ProviderTypeEnum) === ProviderTypeEnum.AzureOpenAI && (
-                      <div className="flex items-start">
-                        <label
-                          htmlFor={`${providerId}-azure-deployment`}
-                          className={`w-20 pt-2 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
-                          {t('options_models_providers_deployment')}*
-                        </label>
-                        <div className="flex-1 space-y-2">
-                          <div
-                            className={`flex min-h-[42px] flex-wrap items-center gap-2 rounded-md border ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836] text-[#D4CFC9]' : 'border-[#E0DDD5] bg-white text-[#2D2B29]'} p-2`}>
-                            {/* Show azure deployments */}
-                            {(providerConfig.azureDeploymentNames || []).length > 0
-                              ? (providerConfig.azureDeploymentNames || []).map((deploymentName: string) => (
-                                  <div
-                                    key={deploymentName}
-                                    className={`flex items-center rounded-full ${isDarkMode ? 'bg-[#4A4644] text-[#D4CFC9]' : 'bg-[#FFF0EE] text-[#C74634]'} px-2 py-1 text-sm`}>
-                                    <span>{deploymentName}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => removeAzureDeployment(providerId, deploymentName)}
-                                      className={`ml-1 font-bold ${isDarkMode ? 'text-[#C74634] hover:text-[#9E3929]' : 'text-[#C74634] hover:text-[#9E3929]'}`}
-                                      aria-label={`Remove ${deploymentName}`}>
-                                      ×
-                                    </button>
-                                  </div>
-                                ))
-                              : null}
-                            <input
-                              id={`${providerId}-azure-deployment-input`}
-                              type="text"
-                              placeholder={t('options_models_providers_placeholders_azureDeployment')}
-                              value={newModelInputs[providerId] || ''}
-                              onChange={e => handleModelsChange(providerId, e.target.value)}
-                              onKeyDown={e => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  const value = newModelInputs[providerId] || '';
-                                  if (value.trim()) {
-                                    addAzureDeployment(providerId, value.trim());
-                                    // Clear the input
-                                    setNewModelInputs(prev => ({
-                                      ...prev,
-                                      [providerId]: '',
-                                    }));
-                                  }
-                                }
-                              }}
-                              className={`min-w-[150px] flex-1 border-none text-sm ${isDarkMode ? 'bg-transparent text-[#D4CFC9]' : 'bg-transparent text-[#2D2B29]'} p-1 outline-none`}
-                            />
-                          </div>
-                          <p className={`mt-1 text-xs ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>
-                            {t('options_models_providers_deployment_desc')}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* NEW: Azure API Version input */}
-                    {(providerConfig.type as ProviderTypeEnum) === ProviderTypeEnum.AzureOpenAI && (
-                      <div className="flex items-center">
-                        <label
-                          htmlFor={`${providerId}-azure-version`}
-                          className={`w-20 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
-                          {t('options_models_providers_apiVersion')}*
-                        </label>
-                        <input
-                          id={`${providerId}-azure-version`}
-                          type="text"
-                          placeholder={t('options_models_providers_placeholders_azureApiVersion')}
-                          value={providerConfig.azureApiVersion || ''}
-                          onChange={e => handleAzureApiVersionChange(providerId, e.target.value)}
-                          className={`flex-1 rounded border text-sm ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836] text-[#D4CFC9] focus:border-[#C74634] focus:ring-2 focus:ring-[#C74634]/20' : 'border-[#E0DDD5] bg-white text-[#2D2B29] focus:border-[#C74634] focus:ring-2 focus:ring-[#C74634]/20'} p-2 outline-none`}
-                        />
-                      </div>
-                    )}
-
-                    {/* Models input section (for non-Azure providers) */}
-                    {(providerConfig.type as ProviderTypeEnum) !== ProviderTypeEnum.AzureOpenAI && (
-                      <div className="flex items-start">
+                    {/* Models input section */}
+                    <div className="flex items-start">
                         <label
                           htmlFor={`${providerId}-models-label`}
                           className={`w-20 pt-2 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
@@ -1488,7 +1614,6 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                           {/* === END: Conditional UI === */}
                         </div>
                       </div>
-                    )}
 
                     {/* Ollama reminder at the bottom of the section */}
                     {providerConfig.type === ProviderTypeEnum.Ollama && (
@@ -1514,6 +1639,8 @@ export const ModelSettings = ({ isDarkMode = false }: ModelSettingsProps) => {
                       </div>
                     )}
                   </div>
+                    </>
+                  )}
 
                   {/* Add divider except for the last item */}
                   {Object.keys(providers).indexOf(providerId) < Object.keys(providers).length - 1 && (

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import '@src/Options.css';
-import { Button } from '@extension/ui';
 import { withErrorBoundary, withSuspense } from '@extension/shared';
 import { t } from '@extension/i18n';
 import { FiSettings, FiCpu, FiShield, FiHelpCircle } from 'react-icons/fi';
 import { GeneralSettings } from './components/GeneralSettings';
 import { ModelSettings } from './components/ModelSettings';
 import { FirewallSettings } from './components/FirewallSettings';
+import { HelpSettings } from './components/HelpSettings';
 type TabTypes = 'general' | 'models' | 'firewall' | 'help';
 
 const TABS: { id: TabTypes; icon: React.ComponentType<{ className?: string }>; label: string }[] = [
@@ -33,11 +33,7 @@ const Options = () => {
   }, []);
 
   const handleTabClick = (tabId: TabTypes) => {
-    if (tabId === 'help') {
-      window.open('https://oracle.com/axis/docs', '_blank');
-    } else {
-      setActiveTab(tabId);
-    }
+    setActiveTab(tabId);
   };
 
   const renderTabContent = () => {
@@ -48,6 +44,8 @@ const Options = () => {
         return <ModelSettings isDarkMode={isDarkMode} />;
       case 'firewall':
         return <FirewallSettings isDarkMode={isDarkMode} />;
+      case 'help':
+        return <HelpSettings isDarkMode={isDarkMode} />;
       default:
         return null;
     }
@@ -67,22 +65,24 @@ const Options = () => {
               {t('options_nav_header')}
             </h1>
           </div>
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {TABS.map(item => (
               <li key={item.id}>
-                <Button
+                <button
                   onClick={() => handleTabClick(item.id)}
+                  type="button"
+                  aria-current={activeTab === item.id ? 'page' : undefined}
                   className={`flex w-full items-center gap-2.5 rounded-sm px-3 py-2 text-left text-sm font-medium transition-colors
                     ${
                       activeTab === item.id
-                        ? 'bg-[#C74634] text-white shadow-sm'
+                        ? 'border border-[#8B2C20] bg-[#8B2C20] text-white shadow-sm'
                         : isDarkMode
-                          ? 'text-[#C4BFBA] hover:bg-[#4A4644] hover:text-white'
-                          : 'text-[#2D2B29] hover:bg-[#F8F7F3] hover:text-[#C74634]'
+                          ? 'border border-[#4A4644] bg-[#3A3836] text-[#D4CFC9] hover:border-[#8B2C20] hover:bg-[#8B2C20] hover:text-white'
+                          : 'border border-[#E0DDD5] bg-white text-[#2D2B29] hover:border-[#8B2C20] hover:bg-[#8B2C20] hover:text-white'
                     }`}>
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span>{item.label}</span>
-                </Button>
+                </button>
               </li>
             ))}
           </ul>
