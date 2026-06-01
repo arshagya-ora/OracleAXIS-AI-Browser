@@ -28,8 +28,8 @@ Oracle AXIS provides a command-and-observe workflow:
 |---|---|
 | Dual-agent architecture | A Planner reasons about goals while a Navigator executes browser actions |
 | 20-action browser vocabulary | Navigation, interaction, scrolling, tabs, dropdowns, keyboard shortcuts, and extraction |
-| Conversational interface | SageBot-style follow-up and task chaining from the sidebar |
-| Pluggable LLM support | OpenAI, Anthropic, Gemini, Ollama, DeepSeek, Grok, Groq, Cerebras, Azure, and more |
+| Conversational interface | follow-up and task chaining from the sidebar |
+| Pluggable LLM support | OpenAI, Gemini, Ollama, Grok, Groq and more |
 | Real-time execution feed | Intent-labelled actions streamed live for full transparency |
 | URL firewall and access control | Allow/deny lists scope automation to safe domains |
 | Task replay | Record a session once, re-execute it reliably on demand |
@@ -58,11 +58,6 @@ Puppeteer Core  ──CDP──▶  Live Chrome Tab
 4. Anti-detection scripts are injected on attach to mask the `webdriver` flag and normalize permissions and Shadow DOM behaviour — making automation indistinguishable from a human session.
 5. Every action result (success, failure, extracted content) is streamed back to the side panel as a structured execution event.
 
-### Anti-detection measures
-
-- `navigator.webdriver` spoofed to `false`
-- Permissions API normalised to suppress automation-related prompts
-- Shadow DOM piercing utilities injected for SPAs that rely on Web Components
 
 ### DOM representation
 
@@ -137,8 +132,8 @@ User Instruction
 
 Each agent can be assigned a different model and provider. A common pattern is:
 
-- **Planner** → large reasoning model (e.g. `claude-opus-4-1`, `gpt-5`)
-- **Navigator** → fast, cost-efficient model (e.g. `claude-haiku-4-5`, `gemini-2.5-flash`)
+- **Planner** → large reasoning model 
+- **Navigator** → fast, cost-efficient model
 
 Temperature and `topP` are tunable per agent to balance creativity (Planner) against determinism (Navigator).
 
@@ -149,19 +144,18 @@ Temperature and `topP` are tunable per agent to balance creativity (Planner) aga
 | Provider | Models (examples) |
 |---|---|
 | OpenAI | gpt-5.1, gpt-5, gpt-4.1, gpt-4o |
-| Anthropic | claude-opus-4-1, claude-sonnet-4-5, claude-haiku-4-5 |
 | Google Gemini | gemini-2.5-pro, gemini-2.5-flash, gemini-3-pro-preview |
 | Ollama (local) | qwen3:14b, falcon3:10b, mistral-small:24b |
-| DeepSeek | deepseek-chat, deepseek-reasoner |
 | Grok (xAI) | grok-3, grok-3-mini |
 | Groq | llama-4-maverick, llama-4-scout, qwen-qwq |
-| Azure OpenAI | Custom deployment names + Azure endpoint |
 | OpenRouter | Any model routed through OpenRouter |
-| Cerebras | Cerebras inference endpoints |
 | Llama API | Meta Llama API |
+| Codex SSO Local Bridge | Codex CLI default model through organization SSO |
 | Custom OpenAI | Any OpenAI-compatible endpoint |
 
-API keys and base URLs are stored in Chrome local storage under `llm-api-keys`. No data is ever sent to Oracle AXIS servers — all inference calls go directly from your browser to the provider.
+For organizations using Codex SSO, run `codex login`, then start the local bridge with `pnpm codex-bridge`. Paste the bridge token printed by the terminal into **Options -> Models -> Codex SSO Local Bridge** and click **Test Bridge**. If the bridge reports `spawn codex ENOENT`, restart the bridge from a terminal where `codex --version` works, or set `CODEX_CLI_PATH` before starting it, for example PowerShell: `$env:CODEX_CLI_PATH=(Get-Command codex).Source; pnpm codex-bridge`. The extension stores only the localhost bridge URL and bridge token; it does not read `.codex/auth.json`. Direct API-key providers continue to call their provider from the browser.
+
+API keys and base URLs are stored in Chrome local storage under `llm-api-keys`. No data is ever sent to any server — all inference calls go directly from your browser to the provider.
 
 ---
 
@@ -212,17 +206,6 @@ Enable replay in **Options → General → Replay historical tasks**.
 
 ## Daily Workflow Examples
 
-### Developer workflows
-
-**Populate a staging environment form**
-> "Go to staging.myapp.com/admin, log in with my test credentials, navigate to Users, create a new user with email test@example.com, role Editor, and confirm."
-
-**Cross-browser regression check**
-> "Open app.myapp.com, navigate through the checkout flow with a Visa test card, and tell me if the order confirmation page loads correctly."
-
-**API key rotation**
-> "Go to the AWS console, open IAM, find the access key for ci-deploy, deactivate it, create a new one, and copy the key ID and secret."
-
 ### QA engineer workflows
 
 **Smoke test a release**
@@ -230,9 +213,6 @@ Enable replay in **Options → General → Replay historical tasks**.
 
 **Validate a form with edge-case inputs**
 > "On the signup page, try submitting with an empty email, a 300-character name, and a password with special characters. Report what validation messages appear."
-
-**Screenshot comparison baseline**
-> "Visit these 5 URLs and take a screenshot of each: [list]. Save them and tell me if any page shows a 404 or blank content."
 
 ### Operations workflows
 
@@ -245,15 +225,6 @@ Enable replay in **Options → General → Replay historical tasks**.
 **Ticket triage**
 > "Open Jira, filter for P1 bugs assigned to nobody created in the last 24 hours, and list their titles and URLs."
 
-### Conversational task chaining
-
-Once a task completes, you can continue without starting over:
-
-> "Now filter the results to only show items created after March 1st."
-> "Go back and do the same thing for the production environment."
-> "Save the extracted table to my clipboard."
-
----
 
 ## Architecture Overview
 
@@ -382,11 +353,3 @@ Oracle AXIS eliminates hours of manual browser work per incident or workflow cyc
 Our vision is to make browser automation conversational, transparent, and universally accessible — so any engineer, regardless of automation expertise, can command the web and get reliable results in seconds.
 
 ---
-
-## License
-
-Apache-2.0
-
-## Repository
-
-https://github.com/oracle-axis/oracle-axis.git

@@ -411,6 +411,108 @@
     }
   },
 
+  "options_models_codex_header": {
+    "message": "Legacy Codex API-key import"
+  },
+  "options_models_codex_description": {
+    "message": "Import older Oracle Code Assist settings from Codex config.toml and auth.json without changing existing providers."
+  },
+  "options_models_codex_files": {
+    "message": "Files"
+  },
+  "options_models_codex_importButton": {
+    "message": "Import from Codex"
+  },
+  "options_models_codex_reimportButton": {
+    "message": "Re-import from Codex"
+  },
+  "options_models_codex_selectHint": {
+    "message": "Select .codex/config.toml first, then .codex/auth.json."
+  },
+  "options_models_codex_previewTitle": {
+    "message": "Import Preview"
+  },
+  "options_models_codex_confirmImport": {
+    "message": "Confirm Import"
+  },
+  "options_models_codex_provider": {
+    "message": "Provider"
+  },
+  "options_models_codex_providerKey": {
+    "message": "Provider Key"
+  },
+  "options_models_codex_defaultModel": {
+    "message": "Default Model"
+  },
+  "options_models_codex_profile": {
+    "message": "Profile"
+  },
+  "options_models_codex_reasoning": {
+    "message": "Reasoning"
+  },
+  "options_models_codex_wireApi": {
+    "message": "Wire API"
+  },
+  "options_models_codex_baseUrl": {
+    "message": "Base URL"
+  },
+  "options_models_codex_auth": {
+    "message": "Auth"
+  },
+  "options_models_codex_authStored": {
+    "message": "API key loaded from auth.json"
+  },
+  "options_models_codex_availableModels": {
+    "message": "Available Models"
+  },
+  "options_models_codex_none": {
+    "message": "None"
+  },
+  "options_models_codex_importedNote": {
+    "message": "Imported from Codex. Re-import to sync config changes."
+  },
+  "options_models_codex_readOnly": {
+    "message": "This provider is managed by Codex import and cannot be edited here."
+  },
+  "options_models_codex_sso_header": {
+    "message": "Codex SSO Local Bridge"
+  },
+  "options_models_codex_sso_description": {
+    "message": "Connect Oracle AXIS to Codex CLI after you sign in with your organization SSO."
+  },
+  "options_models_codex_sso_bridgeUrl": {
+    "message": "Bridge URL"
+  },
+  "options_models_codex_sso_bridgeToken": {
+    "message": "Bridge Token"
+  },
+  "options_models_codex_sso_testButton": {
+    "message": "Test Bridge"
+  },
+  "options_models_codex_sso_testing": {
+    "message": "Testing..."
+  },
+  "options_models_codex_sso_hint": {
+    "message": "Run pnpm codex-bridge, then paste the bridge token shown in the terminal."
+  },
+  "options_models_codex_sso_success": {
+    "message": "Bridge connected with $1."
+  },
+  "options_models_codex_sso_tokenRequired": {
+    "message": "Bridge token is required."
+  },
+  "options_models_codex_sso_notLoggedIn": {
+    "message": "Codex CLI is not logged in. Run codex login and try again."
+  },
+  "options_models_codex_sso_importedNote": {
+    "message": "Connected through the local Codex SSO bridge."
+  },
+  "options_models_codex_sso_readOnly": {
+    "message": "This provider is managed by the local bridge setup. Use the bridge card above to update it."
+  },
+  "options_models_codex_sso_authStored": {
+    "message": "Bridge token stored locally"
+  },
   "options_firewall_header": {
     "message": "Firewall"
   },

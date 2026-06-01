@@ -2,6 +2,7 @@ import 'webextension-polyfill';
 import {
   agentModelStore,
   AgentNameEnum,
+  chatHistoryStore,
   firewallStore,
   generalSettingsStore,
   llmProviderStore,
@@ -16,6 +17,8 @@ import type { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { DEFAULT_AGENT_OPTIONS } from './agent/types';
 import { SpeechToTextService } from './services/speechToText';
 import { injectBuildDomTreeScripts } from './browser/dom/service';
+import { evaluateDomReplayAccuracy } from './agent/domReplayAccuracy';
+import type { AgentStepHistory } from './agent/history';
 
 const logger = createLogger('background');
 
@@ -229,6 +232,64 @@ chrome.runtime.onConnect.addListener(port => {
               });
             }
             break;
+          }
+
+          case 'dom_replay_accuracy': {
+            if (!message.tabId) return port.postMessage({ type: 'dom_replay_accuracy_error', error: t('bg_errors_noTabId') });
+            if (!message.historySessionId) {
+              return port.postMessage({ type: 'dom_replay_accuracy_error', error: t('bg_cmd_replay_noHistory') });
+            }
+
+            try {
+              await browserContext.switchTab(message.tabId);
+              const historyFromStorage = await chatHistoryStore.loadAgentStepHistory(message.historySessionId);
+              if (!historyFromStorage) {
+                return port.postMessage({
+                  type: 'dom_replay_accuracy_error',
+                  historySessionId: message.historySessionId,
+                  error: t('exec_replay_historyNotFound'),
+                });
+              }
+
+              const history = JSON.parse(historyFromStorage.history) as AgentStepHistory;
+              const currentState = await browserContext.getState(false);
+              const report = await evaluateDomReplayAccuracy(history, currentState, {
+                requireSameUrl: Boolean(message.requireSameUrl),
+              });
+
+              return port.postMessage({
+                type: 'dom_replay_accuracy_result',
+                historySessionId: message.historySessionId,
+                report: {
+                  totalTargets: report.totalTargets,
+                  matchedTargets: report.matchedTargets,
+                  failedTargets: report.failedTargets,
+                  ambiguousTargets: report.ambiguousTargets,
+                  indexChangedButRecovered: report.indexChangedButRecovered,
+                  accuracyPercent: report.accuracyPercent,
+                  failures: report.failures,
+                  results: report.results.map(result => ({
+                    stepIndex: result.stepIndex,
+                    actionIndex: result.actionIndex,
+                    actionName: result.actionName,
+                    originalIndex: result.originalIndex,
+                    currentIndex: result.currentIndex,
+                    status: result.status,
+                    matchCount: result.matchCount,
+                    reason: result.reason,
+                    historicalUrl: result.historicalUrl,
+                    historicalTitle: result.historicalTitle,
+                  })),
+                },
+              });
+            } catch (error) {
+              logger.error('DOM replay accuracy failed:', error);
+              return port.postMessage({
+                type: 'dom_replay_accuracy_error',
+                historySessionId: message.historySessionId,
+                error: error instanceof Error ? error.message : t('errors_unknown'),
+              });
+            }
           }
 
           default:

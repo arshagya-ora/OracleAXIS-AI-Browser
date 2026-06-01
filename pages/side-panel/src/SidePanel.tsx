@@ -11,6 +11,9 @@ import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
 import ChatHistoryList from './components/ChatHistoryList';
 import BookmarkList from './components/BookmarkList';
+import DomReplayAccuracyReport, {
+  type DomReplayAccuracyReportData,
+} from './components/DomReplayAccuracyReport';
 import { EventType, type AgentEvent, ExecutionState } from './types/event';
 import './SidePanel.css';
 
@@ -36,8 +39,14 @@ const SidePanel = () => {
   const [hasConfiguredModels, setHasConfiguredModels] = useState<boolean | null>(null); // null = loading, false = no models, true = has models
   const [isReplaying, setIsReplaying] = useState(false);
   const [replayEnabled, setReplayEnabled] = useState(false);
+  const [showAccuracyReport, setShowAccuracyReport] = useState(false);
+  const [accuracyReport, setAccuracyReport] = useState<DomReplayAccuracyReportData | null>(null);
+  const [accuracyError, setAccuracyError] = useState<string | null>(null);
+  const [accuracyReportTitle, setAccuracyReportTitle] = useState('');
+  const [accuracyLoadingSessionId, setAccuracyLoadingSessionId] = useState<string | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const isReplayingRef = useRef<boolean>(false);
+  const accuracyRequestSessionRef = useRef<string | null>(null);
   const portRef = useRef<chrome.runtime.Port | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -314,6 +323,20 @@ const SidePanel = () => {
           });
           setInputEnabled(true);
           setShowStopButton(false);
+        } else if (message && message.type === 'dom_replay_accuracy_result') {
+          if (!accuracyRequestSessionRef.current || accuracyRequestSessionRef.current === message.historySessionId) {
+            setAccuracyReport(message.report);
+            setAccuracyError(null);
+            setAccuracyLoadingSessionId(null);
+            setShowAccuracyReport(true);
+          }
+        } else if (message && message.type === 'dom_replay_accuracy_error') {
+          if (!accuracyRequestSessionRef.current || accuracyRequestSessionRef.current === message.historySessionId) {
+            setAccuracyReport(null);
+            setAccuracyError(message.error || t('errors_unknown'));
+            setAccuracyLoadingSessionId(null);
+            setShowAccuracyReport(true);
+          }
         } else if (message && message.type === 'heartbeat_ack') {
           console.log('Heartbeat acknowledged');
         }
@@ -668,16 +691,27 @@ const SidePanel = () => {
   const handleLoadHistory = async () => {
     await loadChatSessions();
     setShowHistory(true);
+    setShowAccuracyReport(false);
   };
 
   const handleBackToChat = (reset = false) => {
     setShowHistory(false);
+    setShowAccuracyReport(false);
     if (reset) {
       setCurrentSessionId(null);
       setMessages([]);
       setIsFollowUpMode(false);
       setIsHistoricalSession(false);
     }
+  };
+
+  const handleBackToHistoryFromAccuracy = () => {
+    setShowAccuracyReport(false);
+    setAccuracyReport(null);
+    setAccuracyError(null);
+    setAccuracyLoadingSessionId(null);
+    accuracyRequestSessionRef.current = null;
+    setShowHistory(true);
   };
 
   const handleSessionSelect = async (sessionId: string) => {
@@ -734,6 +768,48 @@ const SidePanel = () => {
       }
     } catch (error) {
       console.error('Failed to pin session to favorites:', error);
+    }
+  };
+
+  const handleSessionAccuracy = async (sessionId: string) => {
+    const sessionTitle = chatSessions.find(session => session.id === sessionId)?.title ?? `History ${sessionId}`;
+    setAccuracyReportTitle(sessionTitle);
+    setAccuracyReport(null);
+    setAccuracyError(null);
+    setAccuracyLoadingSessionId(sessionId);
+    setShowAccuracyReport(true);
+    accuracyRequestSessionRef.current = sessionId;
+
+    try {
+      const historyData = await chatHistoryStore.loadAgentStepHistory(sessionId);
+      if (!historyData) {
+        throw new Error(t('chat_replay_noHistory', sessionId.substring(0, 20)));
+      }
+
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tabId = tabs[0]?.id;
+      if (!tabId) {
+        throw new Error('No active tab found');
+      }
+
+      if (!portRef.current) {
+        setupConnection();
+      }
+
+      if (!portRef.current) {
+        throw new Error(t('errors_conn_serviceWorker'));
+      }
+
+      portRef.current.postMessage({
+        type: 'dom_replay_accuracy',
+        tabId,
+        historySessionId: sessionId,
+      });
+    } catch (error) {
+      setAccuracyReport(null);
+      setAccuracyError(error instanceof Error ? error.message : String(error));
+      setAccuracyLoadingSessionId(null);
+      setShowAccuracyReport(true);
     }
   };
 
@@ -814,10 +890,10 @@ const SidePanel = () => {
         className={`flex h-screen flex-col ${isDarkMode ? 'bg-ebony' : 'bg-canvas'} overflow-hidden border ${isDarkMode ? 'border-ebony-muted' : 'border-warm-border'} rounded font-oracle`}>
         <header className="header relative">
           <div className="header-logo">
-            {showHistory ? (
+            {showHistory || showAccuracyReport ? (
               <button
                 type="button"
-                onClick={() => handleBackToChat(false)}
+                onClick={() => (showAccuracyReport ? handleBackToHistoryFromAccuracy() : handleBackToChat(false))}
                 className="cursor-pointer text-[#C4BFBA] transition-colors hover:text-white"
                 aria-label={t('nav_back_a11y')}>
                 {t('nav_back')}
@@ -830,7 +906,7 @@ const SidePanel = () => {
             )}
           </div>
           <div className="header-icons">
-            {!showHistory && (
+            {!showHistory && !showAccuracyReport && (
               <>
                 <button
                   type="button"
@@ -863,13 +939,26 @@ const SidePanel = () => {
             </button>
           </div>
         </header>
-        {showHistory ? (
+        {showAccuracyReport ? (
+          <div className="flex-1 overflow-hidden">
+            <DomReplayAccuracyReport
+              report={accuracyReport}
+              error={accuracyError}
+              isLoading={accuracyLoadingSessionId !== null}
+              sessionTitle={accuracyReportTitle}
+              onBack={handleBackToHistoryFromAccuracy}
+              isDarkMode={isDarkMode}
+            />
+          </div>
+        ) : showHistory ? (
           <div className="flex-1 overflow-hidden">
             <ChatHistoryList
               sessions={chatSessions}
               onSessionSelect={handleSessionSelect}
               onSessionDelete={handleSessionDelete}
               onSessionBookmark={handleSessionBookmark}
+              onSessionAccuracy={handleSessionAccuracy}
+              accuracyLoadingSessionId={accuracyLoadingSessionId}
               visible={true}
               isDarkMode={isDarkMode}
             />

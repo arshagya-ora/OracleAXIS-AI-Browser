@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { FaTrash } from 'react-icons/fa';
+import { FaChartLine, FaTrash } from 'react-icons/fa';
 import { BsBookmark } from 'react-icons/bs';
 import { t } from '@extension/i18n';
 
@@ -14,6 +14,8 @@ interface ChatHistoryListProps {
   onSessionSelect: (sessionId: string) => void;
   onSessionDelete: (sessionId: string) => void;
   onSessionBookmark: (sessionId: string) => void;
+  onSessionAccuracy?: (sessionId: string) => void;
+  accuracyLoadingSessionId?: string | null;
   visible: boolean;
   isDarkMode?: boolean;
 }
@@ -23,6 +25,8 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
   onSessionSelect,
   onSessionDelete,
   onSessionBookmark,
+  onSessionAccuracy,
+  accuracyLoadingSessionId = null,
   visible,
   isDarkMode = false,
 }) => {
@@ -54,13 +58,33 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                   : 'border-[#E0DDD5] bg-white hover:border-[#C74634]'
               } p-3`}>
               <button onClick={() => onSessionSelect(session.id)} className="w-full text-left" type="button">
-                <h3 className={`pr-8 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                <h3 className={`pr-20 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
                   {session.title}
                 </h3>
                 <p className={`mt-1 text-xs ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>
                   {formatDate(session.createdAt)}
                 </p>
               </button>
+
+              {/* Accuracy button - top right */}
+              {onSessionAccuracy && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    onSessionAccuracy(session.id);
+                  }}
+                  className={`absolute right-14 top-2 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 ${
+                    isDarkMode
+                      ? 'text-[#C74634] hover:bg-[#4A4644]'
+                      : 'text-[#C74634] hover:bg-[#F8F7F3]'
+                  }`}
+                  aria-label="Check DOM replay accuracy"
+                  title="Check DOM replay accuracy"
+                  disabled={accuracyLoadingSessionId === session.id}
+                  type="button">
+                  <FaChartLine size={13} />
+                </button>
+              )}
 
               {/* Bookmark button - top right */}
               {onSessionBookmark && (

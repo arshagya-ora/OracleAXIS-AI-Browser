@@ -1,0 +1,13 @@
+{
+  "name": "@oc-axis/codex-sso-bridge",
+  "version": "0.1.13",
+  "description": "Local Codex SSO bridge for Oracle AXIS",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "oc-axis-codex-bridge": "./src/server.mjs"
+  },
+  "scripts": {
+    "start": "node ./src/server.mjs"
+  }
+}

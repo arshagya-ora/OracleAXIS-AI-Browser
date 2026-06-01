@@ -7,7 +7,7 @@ import { createLogger } from '@src/background/log';
 import type { Action } from '../actions/builder';
 import { convertInputMessages, extractJsonFromModelOutput, removeThinkTags } from '../messages/utils';
 import { isAbortedError, ResponseParseError } from './errors';
-import { ProviderTypeEnum } from '@extension/storage';
+import { CODEX_SSO_PROVIDER_ID, ProviderTypeEnum } from '@extension/storage';
 
 const logger = createLogger('agent');
 
@@ -41,6 +41,7 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
   protected modelOutputSchema: T;
   protected toolCallingMethod: string | null;
   protected chatModelLibrary: string;
+  protected chatModelType: string;
   protected modelName: string;
   protected provider: string;
   protected withStructuredOutput: boolean;
@@ -57,6 +58,7 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
     this.provider = options.provider || '';
     // TODO: fix this, the name is not correct in production environment
     this.chatModelLibrary = this.chatLLM.constructor.name;
+    this.chatModelType = this.getChatModelType();
     this.modelName = this.getModelName();
     this.withStructuredOutput = this.setWithStructuredOutput();
     // extra options
@@ -78,6 +80,16 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
       return this.chatLLM.model as string;
     }
     return 'Unknown';
+  }
+
+  private getChatModelType(): string {
+    const chatModel = this.chatLLM as BaseChatModel & { _llmType?: () => string };
+
+    try {
+      return chatModel._llmType?.() ?? '';
+    } catch {
+      return '';
+    }
   }
 
   // Set the tool calling method
@@ -103,15 +115,28 @@ export abstract class BaseAgent<T extends z.ZodType, M = unknown> {
     return modelName.includes('Llama-4') || modelName.includes('Llama-3.3') || modelName.includes('llama-3.3');
   }
 
+  private isOcaCodexResponsesModel(): boolean {
+    return (
+      this.provider === CODEX_SSO_PROVIDER_ID ||
+      this.provider === ProviderTypeEnum.CodexSsoBridge ||
+      this.chatModelType === 'oca_responses' ||
+      this.chatModelType === 'codex_sso_bridge' ||
+      this.chatModelLibrary === 'OcaResponsesChatModel' ||
+      this.chatModelLibrary === 'CodexSsoBridgeChatModel' ||
+      this.modelName.startsWith('oca/')
+    );
+  }
+
   // Set whether to use structured output based on the model name
   private setWithStructuredOutput(): boolean {
-    if (this.modelName === 'deepseek-reasoner' || this.modelName === 'deepseek-r1') {
-      return false;
-    }
-
     // Llama API models don't support json_schema response format
     if (this.provider === ProviderTypeEnum.Llama || this.isLlamaModel(this.modelName)) {
       logger.debug(`[${this.modelName}] Llama API doesn't support structured output, using manual JSON extraction`);
+      return false;
+    }
+
+    if (this.isOcaCodexResponsesModel()) {
+      logger.debug(`[${this.modelName}] OCA/Codex responses adapter uses manual JSON extraction`);
       return false;
     }
 

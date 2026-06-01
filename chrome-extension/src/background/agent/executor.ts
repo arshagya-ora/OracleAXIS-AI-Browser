@@ -24,6 +24,11 @@ import { URLNotAllowedError } from '../browser/views';
 import { chatHistoryStore } from '@extension/storage/lib/chat';
 import type { AgentStepHistory } from './history';
 import type { GeneralSettingsConfig } from '@extension/storage';
+import {
+  evaluateDomReplayAccuracy,
+  type DomReplayAccuracyOptions,
+  type DomReplayAccuracyResult,
+} from './domReplayAccuracy';
 
 const logger = createLogger('Executor');
 
@@ -410,5 +415,23 @@ export class Executor {
     }
 
     return results;
+  }
+
+  async evaluateReplayHistoryDomAccuracy(
+    sessionId: string,
+    options: DomReplayAccuracyOptions = {},
+  ): Promise<DomReplayAccuracyResult> {
+    const historyFromStorage = await chatHistoryStore.loadAgentStepHistory(sessionId);
+    if (!historyFromStorage) {
+      throw new Error(t('exec_replay_historyNotFound'));
+    }
+
+    const history = JSON.parse(historyFromStorage.history) as AgentStepHistory;
+    if (history.history.length === 0) {
+      throw new Error(t('exec_replay_historyEmpty'));
+    }
+
+    const currentState = await this.context.browserContext.getState(this.context.options.useVision);
+    return evaluateDomReplayAccuracy(history, currentState, options);
   }
 }
