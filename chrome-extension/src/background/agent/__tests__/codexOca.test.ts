@@ -147,6 +147,23 @@ model = "oca/gpt-5.3-codex"
 model_provider = "oca"
 `;
 
+const CONFIGURED_PROVIDER_CONFIG = `
+model_provider = "oca-responses"
+model = "oca/gpt-5.4"
+model_reasoning_effort = "xhigh"
+
+[model_providers.oca-responses]
+base_url = "https://example.com/responses"
+http_headers = { "client" = "codex-cli", "client-version" = "0" }
+model = "oca/gpt-5.4"
+name = "Oracle Code Assist Responses"
+wire_api = "responses"
+
+[profiles.gpt-5-3-codex]
+model = "oca/gpt-5.3-codex"
+model_provider = "oca-responses"
+`;
+
 const MISSING_PROVIDER_CONFIG = `
 [model_providers.other]
 base_url = "https://example.com/llm"
@@ -240,6 +257,19 @@ describe('codex oca import', () => {
       client: 'codex-cli',
       'client-version': '0',
     });
+  });
+
+  it('uses the configured Codex model provider key when present', async () => {
+    const storage = await import('@extension/storage');
+
+    const preview = storage.createCodexImportPreview(CONFIGURED_PROVIDER_CONFIG, VALID_AUTH);
+
+    expect(preview.providerKey).toBe('oca-responses');
+    expect(preview.providerName).toBe('Oracle Code Assist Responses');
+    expect(preview.baseUrl).toBe('https://example.com/responses');
+    expect(preview.modelName).toBe('oca/gpt-5.4');
+    expect(preview.modelNames).toEqual(expect.arrayContaining(['oca/gpt-5.4', 'oca/gpt-5.3-codex']));
+    expect(preview.providerConfig.externalProviderKey).toBe('oca-responses');
   });
 
   it('rejects malformed or incomplete import input without mutating providers or agent models', async () => {

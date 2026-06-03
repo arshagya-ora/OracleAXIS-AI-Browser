@@ -375,9 +375,19 @@ function resolveDefaultModel(config: ParsedCodexConfig, providerKey: string): {
   };
 }
 
-export function createCodexImportPreview(configText: string, authText: string, providerKey = 'oca'): CodexImportPreview {
+function resolveImportProviderKey(config: ParsedCodexConfig, fallbackProviderKey: string): string {
+  const activeProfile = config.profile ? config.profiles[config.profile] : undefined;
+  return activeProfile?.modelProvider || config.modelProvider || fallbackProviderKey;
+}
+
+export function createCodexImportPreview(
+  configText: string,
+  authText: string,
+  fallbackProviderKey = 'oca',
+): CodexImportPreview {
   const parsedConfig = parseCodexConfigToml(configText);
   const parsedAuth = parseCodexAuthJson(authText);
+  const providerKey = resolveImportProviderKey(parsedConfig, fallbackProviderKey);
   const providerConfig = parsedConfig.modelProviders[providerKey];
 
   if (!providerConfig) {
