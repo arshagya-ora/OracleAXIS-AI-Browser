@@ -70,6 +70,13 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
   const emptyMsg = activeList === 'allow'
     ? t('options_firewall_allowList_empty')
     : t('options_firewall_denyList_empty');
+  const currentModeMessage = !isEnabled
+    ? t('options_firewall_mode_disabled')
+    : allowList.length > 0
+      ? t('options_firewall_mode_allowStrict')
+      : denyList.length > 0
+        ? t('options_firewall_mode_denyOnly')
+        : t('options_firewall_mode_open');
 
   return (
     <section className="space-y-6">
@@ -161,6 +168,12 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
         <h2 className={`mb-4 text-xl font-semibold ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
           {t('options_firewall_howItWorks_header')}
         </h2>
+        <p
+          className={`mb-4 rounded border px-3 py-2 text-sm font-medium ${
+            isDarkMode ? 'border-[#4A4644] bg-[#2D2B29] text-[#D4CFC9]' : 'border-[#E0DDD5] bg-[#F8F7F3] text-[#2D2B29]'
+          }`}>
+          {currentModeMessage}
+        </p>
         <ul className={`list-disc space-y-2 pl-5 text-left text-sm ${isDarkMode ? 'text-[#C4BFBA]' : 'text-[#6B6460]'}`}>
           {t('options_firewall_howItWorks').split('\n').map((rule, index) => (
             <li key={index}>{rule}</li>

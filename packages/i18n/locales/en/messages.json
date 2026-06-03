@@ -548,7 +548,19 @@
     "message": "How the Firewall Works"
   },
   "options_firewall_howItWorks": {
-    "message": "The firewall contains a deny list and an allow list.\nIf both lists are empty, all URLs are allowed\nDeny list takes priority - if a URL matches any deny list entry, it's blocked\nWhen allow list is empty, all non-denied URLs are allowed\nWhen allow list is not empty, only matching URLs are allowed\nWildcards are NOT supported yet\nAllow list is preferred over deny list"
+    "message": "The allow list becomes a strict whitelist when it has entries.\nOnly URLs matching the allow list can open; every other URL is blocked.\nWhen the allow list has entries, the deny list is ignored.\nWhen the allow list is empty, the deny list blocks matching URLs and other safe URLs can open.\nDangerous URLs are always blocked.\nEntries can match domains, subdomains, exact URLs, and host:port values.\nWildcards are not supported yet."
+  },
+  "options_firewall_mode_disabled": {
+    "message": "Current mode: Firewall disabled. Safe URLs can open except dangerous URLs, which are always blocked."
+  },
+  "options_firewall_mode_allowStrict": {
+    "message": "Current mode: Strict allow list. Only URLs matching the allow list can open; every other URL is blocked."
+  },
+  "options_firewall_mode_denyOnly": {
+    "message": "Current mode: Deny list only. URLs matching the deny list are blocked; other safe URLs can open."
+  },
+  "options_firewall_mode_open": {
+    "message": "Current mode: Open. No allow or deny rules are set, so all safe URLs can open."
   },
 
   "bg_errors_noTabId": {

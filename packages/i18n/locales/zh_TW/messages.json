@@ -440,7 +440,19 @@
     "message": "防火牆運作原理"
   },
   "options_firewall_howItWorks": {
-    "message": "防火牆包含一個拒絕清單和一個允許清單。\n- 如果兩個清單都為空，則允許所有 URL。\n- 拒絕清單具有較高優先順序。如果一個 URL 符合任何拒絕清單中的項目，它將被封鎖。\n- 當允許清單為空時，所有未被拒絕的 URL 都會被允許。\n- 當允許清單不為空時，只有符合清單中項目的 URL 才被允許。\n- 目前尚不支援萬用字元。\n- 建議優先使用允許清單，而非拒絕清單。"
+    "message": "允許清單有項目時，會成為嚴格白名單。\n只有符合允許清單的 URL 可以開啟；其他所有 URL 都會被封鎖。\n允許清單有項目時，拒絕清單會被忽略。\n允許清單為空時，拒絕清單會封鎖符合的 URL，其他安全 URL 可以開啟。\n危險 URL 一律會被封鎖。\n項目可符合網域、子網域、完整 URL，以及 host:port 值。\n目前尚不支援萬用字元。"
+  },
+  "options_firewall_mode_disabled": {
+    "message": "目前模式：防火牆已停用。安全 URL 可以開啟，但危險 URL 一律會被封鎖。"
+  },
+  "options_firewall_mode_allowStrict": {
+    "message": "目前模式：嚴格允許清單。只有符合允許清單的 URL 可以開啟；其他所有 URL 都會被封鎖。"
+  },
+  "options_firewall_mode_denyOnly": {
+    "message": "目前模式：僅拒絕清單。符合拒絕清單的 URL 會被封鎖；其他安全 URL 可以開啟。"
+  },
+  "options_firewall_mode_open": {
+    "message": "目前模式：開放。尚未設定允許或拒絕規則，因此所有安全 URL 都可以開啟。"
   },
   "bg_errors_noTabId": {
     "message": "未提供分頁 ID"

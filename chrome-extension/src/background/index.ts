@@ -106,6 +106,7 @@ chrome.runtime.onConnect.addListener(port => {
 
             // If executor exists, add follow-up task
             if (currentExecutor) {
+              await applyFirewallSettings(browserContext);
               currentExecutor.addFollowUpTask(message.task);
               // Re-subscribe to events in case the previous subscription was cleaned up
               subscribeToExecutorEvents(currentExecutor);
@@ -347,19 +348,7 @@ async function setupExecutor(taskId: string, task: string, browserContext: Brows
     plannerLLM = createChatModel(plannerProviderConfig, plannerModel);
   }
 
-  // Apply firewall settings to browser context
-  const firewall = await firewallStore.getFirewall();
-  if (firewall.enabled) {
-    browserContext.updateConfig({
-      allowedUrls: firewall.allowList,
-      deniedUrls: firewall.denyList,
-    });
-  } else {
-    browserContext.updateConfig({
-      allowedUrls: [],
-      deniedUrls: [],
-    });
-  }
+  await applyFirewallSettings(browserContext);
 
   const generalSettings = await generalSettingsStore.getSettings();
   browserContext.updateConfig({
@@ -381,6 +370,21 @@ async function setupExecutor(taskId: string, task: string, browserContext: Brows
   });
 
   return executor;
+}
+
+async function applyFirewallSettings(browserContext: BrowserContext): Promise<void> {
+  const firewall = await firewallStore.getFirewall();
+  if (firewall.enabled) {
+    browserContext.updateConfig({
+      allowedUrls: firewall.allowList,
+      deniedUrls: firewall.denyList,
+    });
+  } else {
+    browserContext.updateConfig({
+      allowedUrls: [],
+      deniedUrls: [],
+    });
+  }
 }
 
 // Update subscribeToExecutorEvents to use port

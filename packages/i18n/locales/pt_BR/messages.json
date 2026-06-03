@@ -547,7 +547,19 @@
     "message": "Como o Firewall Funciona"
   },
   "options_firewall_howItWorks": {
-    "message": "O firewall contém uma lista de negações e uma lista de permissões.\nSe ambas as listas estiverem vazias, todos os URLs são permitidos\nA lista de negações tem prioridade - se um URL corresponder a qualquer entrada da lista de negações, ele será bloqueado\nQuando a lista de permissões está vazia, todos os URLs não negados são permitidos\nQuando a lista de permissões não está vazia, apenas os URLs correspondentes são permitidos\nCuringas ainda NÃO são suportados\nA lista de permissões é preferível à lista de negações"
+    "message": "A lista de permissões vira uma lista estrita quando possui entradas.\nSomente URLs correspondentes à lista de permissões podem abrir; todos os outros URLs são bloqueados.\nQuando a lista de permissões possui entradas, a lista de negações é ignorada.\nQuando a lista de permissões está vazia, a lista de negações bloqueia URLs correspondentes e outros URLs seguros podem abrir.\nURLs perigosos são sempre bloqueados.\nAs entradas podem corresponder a domínios, subdomínios, URLs exatos e valores host:porta.\nCuringas ainda não são suportados."
+  },
+  "options_firewall_mode_disabled": {
+    "message": "Modo atual: Firewall desativado. URLs seguros podem abrir, exceto URLs perigosos, que são sempre bloqueados."
+  },
+  "options_firewall_mode_allowStrict": {
+    "message": "Modo atual: lista de permissões estrita. Somente URLs correspondentes à lista de permissões podem abrir; todos os outros URLs são bloqueados."
+  },
+  "options_firewall_mode_denyOnly": {
+    "message": "Modo atual: somente lista de negações. URLs correspondentes à lista de negações são bloqueados; outros URLs seguros podem abrir."
+  },
+  "options_firewall_mode_open": {
+    "message": "Modo atual: aberto. Nenhuma regra de permissão ou negação está configurada, então todos os URLs seguros podem abrir."
   },
 
   "bg_errors_noTabId": {

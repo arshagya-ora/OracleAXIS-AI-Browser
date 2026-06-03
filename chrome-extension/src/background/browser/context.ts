@@ -26,6 +26,9 @@ export default class BrowserContext {
 
   public updateConfig(config: Partial<BrowserContextConfig>): void {
     this._config = { ...this._config, ...config };
+    for (const page of this._attachedPages.values()) {
+      page.updateConfig(config);
+    }
   }
 
   public updateCurrentTabId(tabId: number): void {

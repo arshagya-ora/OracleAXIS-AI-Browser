@@ -31,11 +31,6 @@ export function isUrlAllowed(url: string, allowList: string[], denyList: string[
     return false;
   }
 
-  // If firewall is disabled, allow all other URLs
-  if (allowList.length === 0 && denyList.length === 0) {
-    return true;
-  }
-
   // Special case: Allow 'about:blank' explicitly
   if (trimmedUrl === 'about:blank') {
     return true;
@@ -43,53 +38,53 @@ export function isUrlAllowed(url: string, allowList: string[], denyList: string[
 
   try {
     const parsedUrl = new URL(trimmedUrl);
-
-    // 1. Remove protocol prefix for further comparisons
     const urlWithoutProtocol = lowerCaseUrl.replace(/^https?:\/\//, '');
+    const host = parsedUrl.host.toLowerCase();
+    const hostname = parsedUrl.hostname.toLowerCase();
 
-    // 2. First check full URL against deny list
-    for (const deniedEntry of denyList) {
-      if (urlWithoutProtocol === deniedEntry) {
-        return false;
-      }
+    if (allowList.length > 0) {
+      return matchesUrlList(urlWithoutProtocol, host, hostname, allowList);
     }
 
-    // 3. Check full URL against allow list
-    for (const allowedEntry of allowList) {
-      if (urlWithoutProtocol === allowedEntry) {
-        return true;
-      }
-    }
-
-    // 4. Extract domain for domain-based checks
-    let domain = parsedUrl.hostname.toLowerCase();
-
-    // Remove port number if present
-    const portIndex = domain.indexOf(':');
-    if (portIndex > -1) {
-      domain = domain.substring(0, portIndex);
-    }
-
-    // 5. Check domain against deny list
-    for (const deniedEntry of denyList) {
-      if (domain === deniedEntry || domain.endsWith(`.${deniedEntry}`)) {
-        return false;
-      }
-    }
-
-    // 6. Check domain against allow list
-    for (const allowedEntry of allowList) {
-      if (domain === allowedEntry || domain.endsWith(`.${allowedEntry}`)) {
-        return true;
-      }
-    }
-
-    // Default policy
-    return allowList.length === 0;
+    return !matchesUrlList(urlWithoutProtocol, host, hostname, denyList);
   } catch (error) {
     // Invalid URL format - deny by default
     return false;
   }
+}
+
+function matchesUrlList(urlWithoutProtocol: string, host: string, hostname: string, entries: string[]): boolean {
+  for (const entry of entries) {
+    const normalizedEntry = entry.trim().toLowerCase().replace(/^https?:\/\//, '');
+    if (!normalizedEntry) {
+      continue;
+    }
+
+    if (trimTrailingSlash(urlWithoutProtocol) === trimTrailingSlash(normalizedEntry)) {
+      return true;
+    }
+
+    // Entries with paths are URL-specific. Host/domain matching only applies
+    // to bare host entries such as example.com or 127.0.0.1:3000.
+    if (normalizedEntry.includes('/')) {
+      continue;
+    }
+
+    if (
+      hostname === normalizedEntry ||
+      host === normalizedEntry ||
+      hostname.endsWith(`.${normalizedEntry}`) ||
+      host.endsWith(`.${normalizedEntry}`)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function trimTrailingSlash(value: string): string {
+  return value.endsWith('/') ? value.slice(0, -1) : value;
 }
 
 // Check if a URL is a new tab page (about:blank or chrome://new-tab-page).

@@ -82,6 +82,10 @@ export default class Page {
       false;
   }
 
+  updateConfig(config: Partial<BrowserContextConfig>): void {
+    this._config = { ...this._config, ...config };
+  }
+
   get tabId(): number {
     return this._tabId;
   }
