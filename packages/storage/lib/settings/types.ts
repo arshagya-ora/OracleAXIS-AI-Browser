@@ -64,6 +64,7 @@ export function isOpenAIReasoningModelName(modelName: string): boolean {
   const normalizedModelName = normalizeReasoningModelName(modelName);
   return (
     normalizedModelName.startsWith('o') ||
+    normalizedModelName.startsWith('gpt5') ||
     (normalizedModelName.startsWith('gpt-5') && !normalizedModelName.startsWith('gpt-5-chat'))
   );
 }

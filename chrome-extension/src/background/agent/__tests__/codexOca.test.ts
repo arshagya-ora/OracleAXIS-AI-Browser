@@ -73,9 +73,10 @@ function installChromeMock() {
   });
 }
 
-function createJsonResponse(body: unknown): Response {
+function createJsonResponse(body: unknown, status = 200, statusText = 'OK'): Response {
   return new Response(JSON.stringify(body), {
-    status: 200,
+    status,
+    statusText,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -616,6 +617,97 @@ describe('codex oca runtime', () => {
       result: navigatorPayload,
     });
     expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)).stream).toBe(true);
+  });
+
+  it('omits sampling parameters for the Codex gpt5 reasoning alias', async () => {
+    const storage = await import('@extension/storage');
+    const { OcaResponsesChatModel } = await import('../models/ocaResponses');
+
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({ output_text: '{"ok":true}' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const chatModel = new OcaResponsesChatModel(
+      {
+        apiKey: 'codex-key',
+        baseUrl: 'https://example.com/llm',
+        modelNames: ['oca/gpt5'],
+        type: storage.ProviderTypeEnum.OcaCodex,
+        wireApi: 'responses',
+      },
+      {
+        provider: storage.CODEX_OCA_PROVIDER_ID,
+        modelName: 'oca/gpt5',
+        parameters: { temperature: 0.7, topP: 0.9 },
+        reasoningEffort: 'high',
+      },
+    );
+
+    await expect(
+      chatModel._call([new SystemMessage('Return JSON only.'), new HumanMessage('Hello')], {
+        signal: new AbortController().signal,
+      }),
+    ).resolves.toBe('{"ok":true}');
+
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(body).toMatchObject({
+      model: 'oca/gpt5',
+      reasoning: { effort: 'high' },
+    });
+    expect(body.temperature).toBeUndefined();
+    expect(body.top_p).toBeUndefined();
+  });
+
+  it('retries OCA responses without sampling parameters when the model rejects them', async () => {
+    const storage = await import('@extension/storage');
+    const { OcaResponsesChatModel } = await import('../models/ocaResponses');
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse(
+          {
+            error: {
+              message: "Unsupported parameter: 'temperature' is not supported with this model.",
+              param: 'temperature',
+              type: 'invalid_request_error',
+            },
+          },
+          400,
+          'Bad Request',
+        ),
+      )
+      .mockResolvedValueOnce(createJsonResponse({ output_text: '{"ok":true}' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const chatModel = new OcaResponsesChatModel(
+      {
+        apiKey: 'codex-key',
+        baseUrl: 'https://example.com/llm',
+        modelNames: ['oca/custom-model'],
+        type: storage.ProviderTypeEnum.OcaCodex,
+        wireApi: 'responses',
+      },
+      {
+        provider: storage.CODEX_OCA_PROVIDER_ID,
+        modelName: 'oca/custom-model',
+        parameters: { temperature: 0.7, topP: 0.9 },
+      },
+    );
+
+    await expect(
+      chatModel._call([new SystemMessage('Return JSON only.'), new HumanMessage('Hello')], {
+        signal: new AbortController().signal,
+      }),
+    ).resolves.toBe('{"ok":true}');
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const firstBody = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    const retryBody = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body));
+
+    expect(firstBody.temperature).toBe(0.7);
+    expect(firstBody.top_p).toBe(0.9);
+    expect(retryBody.temperature).toBeUndefined();
+    expect(retryBody.top_p).toBeUndefined();
   });
 
   it('calls the local Codex SSO bridge without an API Authorization header', async () => {

@@ -187,6 +187,22 @@ function extractErrorMessage(errorBody: unknown): string {
   return 'Unknown error';
 }
 
+function isUnsupportedSamplingParameterError(errorBody: unknown): boolean {
+  if (!errorBody || typeof errorBody !== 'object') {
+    return false;
+  }
+
+  const candidate = errorBody as { error?: { message?: string; param?: string }; message?: string; param?: string };
+  const param = candidate.error?.param || candidate.param;
+  const message = candidate.error?.message || candidate.message || '';
+
+  return (
+    param === 'temperature' ||
+    param === 'top_p' ||
+    (/unsupported parameter/i.test(message) && (message.includes('temperature') || message.includes('top_p')))
+  );
+}
+
 function stripUtf8Bom(value: string): string {
   return value.charCodeAt(0) === 0xfeff ? value.slice(1) : value;
 }
@@ -393,19 +409,39 @@ export class OcaResponsesChatModel extends SimpleChatModel<ResponsesCallOptions>
       requestBody.top_p = this.topP;
     }
 
-    const response = await fetch(buildResponsesUrl(this.baseUrl, this.queryParams), {
-      body: JSON.stringify(requestBody),
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        ...this.defaultHeaders,
-      },
-      method: 'POST',
-      signal: options.signal,
-    });
+    const headers = {
+      Authorization: `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json',
+      ...this.defaultHeaders,
+    };
+    const responseUrl = buildResponsesUrl(this.baseUrl, this.queryParams);
+    const sendRequest = () =>
+      fetch(responseUrl, {
+        body: JSON.stringify(requestBody),
+        headers,
+        method: 'POST',
+        signal: options.signal,
+      });
+
+    let response = await sendRequest();
 
     if (!response.ok) {
       const errorBody = await parseResponsesBody(response);
+      if (isUnsupportedSamplingParameterError(errorBody) && ('temperature' in requestBody || 'top_p' in requestBody)) {
+        delete requestBody.temperature;
+        delete requestBody.top_p;
+        response = await sendRequest();
+
+        if (response.ok) {
+          const retryResponseBody = await parseResponsesBody(response);
+          return extractOutputText(retryResponseBody);
+        }
+
+        const retryErrorBody = await parseResponsesBody(response);
+        throw new Error(
+          `Request failed with ${response.status} ${response.statusText}: ${extractErrorMessage(retryErrorBody)}`,
+        );
+      }
 
       throw new Error(`Request failed with ${response.status} ${response.statusText}: ${extractErrorMessage(errorBody)}`);
     }
