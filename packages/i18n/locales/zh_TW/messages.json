@@ -133,6 +133,9 @@
       }
     }
   },
+  "chat_continue_noActiveSession": {
+    "message": "目前沒有可繼續的任務上下文。請先輸入明確指令（例如：「打開 amazon」）。"
+  },
   "chat_stt_processing": {
     "message": "正在處理語音..."
   },

@@ -371,6 +371,15 @@ describe('codex oca import', () => {
 });
 
 describe('codex oca runtime', () => {
+  it('maps minimal reasoning effort to none only for models that do not support minimal', async () => {
+    const storage = await import('@extension/storage');
+
+    expect(storage.getCompatibleApiReasoningEffort('gpt-5.1', 'minimal')).toBe('none');
+    expect(storage.getCompatibleApiReasoningEffort('oca/gpt-5.3-codex', 'minimal')).toBe('none');
+    expect(storage.getCompatibleApiReasoningEffort('oca/gpt-5.4', 'minimal')).toBe('minimal');
+    expect(storage.getCompatibleApiReasoningEffort('oca/gpt-5.4', 'xhigh')).toBe('xhigh');
+  });
+
   it('routes only the Codex import provider through the responses adapter', async () => {
     const storage = await import('@extension/storage');
     const { createChatModel } = await import('../helper');
@@ -657,6 +666,39 @@ describe('codex oca runtime', () => {
     expect(body.top_p).toBeUndefined();
   });
 
+  it('maps minimal to none for gpt-5.3-codex reasoning payloads', async () => {
+    const storage = await import('@extension/storage');
+    const { OcaResponsesChatModel } = await import('../models/ocaResponses');
+
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({ output_text: '{"ok":true}' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const chatModel = new OcaResponsesChatModel(
+      {
+        apiKey: 'codex-key',
+        baseUrl: 'https://example.com/llm',
+        modelNames: ['oca/gpt-5.3-codex'],
+        type: storage.ProviderTypeEnum.OcaCodex,
+        wireApi: 'responses',
+      },
+      {
+        provider: storage.CODEX_OCA_PROVIDER_ID,
+        modelName: 'oca/gpt-5.3-codex',
+        parameters: { temperature: 0.7, topP: 0.9 },
+        reasoningEffort: 'minimal',
+      },
+    );
+
+    await expect(
+      chatModel._call([new SystemMessage('Return JSON only.'), new HumanMessage('Hello')], {
+        signal: new AbortController().signal,
+      }),
+    ).resolves.toBe('{"ok":true}');
+
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(body.reasoning?.effort).toBe('none');
+  });
+
   it('retries OCA responses without sampling parameters when the model rejects them', async () => {
     const storage = await import('@extension/storage');
     const { OcaResponsesChatModel } = await import('../models/ocaResponses');
@@ -710,6 +752,58 @@ describe('codex oca runtime', () => {
     expect(retryBody.top_p).toBeUndefined();
   });
 
+  it('retries OCA responses without reasoning when reasoning.effort is rejected', async () => {
+    const storage = await import('@extension/storage');
+    const { OcaResponsesChatModel } = await import('../models/ocaResponses');
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse(
+          {
+            error: {
+              message: "Unsupported value: 'minimal' is not supported with this model.",
+              param: 'reasoning.effort',
+              type: 'invalid_request_error',
+            },
+          },
+          400,
+          'Bad Request',
+        ),
+      )
+      .mockResolvedValueOnce(createJsonResponse({ output_text: '{"ok":true}' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const chatModel = new OcaResponsesChatModel(
+      {
+        apiKey: 'codex-key',
+        baseUrl: 'https://example.com/llm',
+        modelNames: ['oca/gpt-5.4'],
+        type: storage.ProviderTypeEnum.OcaCodex,
+        wireApi: 'responses',
+      },
+      {
+        provider: storage.CODEX_OCA_PROVIDER_ID,
+        modelName: 'oca/gpt-5.4',
+        parameters: { temperature: 0.7, topP: 0.9 },
+        reasoningEffort: 'minimal',
+      },
+    );
+
+    await expect(
+      chatModel._call([new SystemMessage('Return JSON only.'), new HumanMessage('Hello')], {
+        signal: new AbortController().signal,
+      }),
+    ).resolves.toBe('{"ok":true}');
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const firstBody = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    const retryBody = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body));
+
+    expect(firstBody.reasoning).toEqual({ effort: 'minimal' });
+    expect(retryBody.reasoning).toBeUndefined();
+  });
+
   it('calls the local Codex SSO bridge without an API Authorization header', async () => {
     const storage = await import('@extension/storage');
     const { CodexSsoBridgeChatModel } = await import('../models/codexSsoBridge');
@@ -751,6 +845,88 @@ describe('codex oca runtime', () => {
       temperature: 0.7,
       top_p: 0.9,
     });
+  });
+
+  it('maps minimal to none for gpt-5.3-codex bridge reasoning payloads', async () => {
+    const storage = await import('@extension/storage');
+    const { CodexSsoBridgeChatModel } = await import('../models/codexSsoBridge');
+
+    const fetchMock = vi.fn().mockResolvedValue(createJsonResponse({ output_text: '{"ok":true}' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const chatModel = new CodexSsoBridgeChatModel(
+      {
+        apiKey: '',
+        baseUrl: 'http://127.0.0.1:14550',
+        bridgeToken: 'bridge-token',
+        type: storage.ProviderTypeEnum.CodexSsoBridge,
+      },
+      {
+        provider: storage.CODEX_SSO_PROVIDER_ID,
+        modelName: 'gpt-5.3-codex',
+        parameters: { temperature: 0.7, topP: 0.9 },
+        reasoningEffort: 'minimal',
+      },
+    );
+
+    const output = await chatModel._call([new SystemMessage('Return JSON only.'), new HumanMessage('Hello')], {
+      signal: new AbortController().signal,
+    });
+
+    expect(output).toBe('{"ok":true}');
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(body.reasoning?.effort).toBe('none');
+  });
+
+  it('retries bridge requests without reasoning when reasoning.effort is rejected', async () => {
+    const storage = await import('@extension/storage');
+    const { CodexSsoBridgeChatModel } = await import('../models/codexSsoBridge');
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse(
+          {
+            error: {
+              message: "Unsupported value: 'minimal' is not supported with this model.",
+              param: 'reasoning.effort',
+              type: 'invalid_request_error',
+            },
+          },
+          400,
+          'Bad Request',
+        ),
+      )
+      .mockResolvedValueOnce(createJsonResponse({ output_text: '{"ok":true}' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const chatModel = new CodexSsoBridgeChatModel(
+      {
+        apiKey: '',
+        baseUrl: 'http://127.0.0.1:14550',
+        bridgeToken: 'bridge-token',
+        type: storage.ProviderTypeEnum.CodexSsoBridge,
+      },
+      {
+        provider: storage.CODEX_SSO_PROVIDER_ID,
+        modelName: 'gpt-5.4',
+        parameters: { temperature: 0.7, topP: 0.9 },
+        reasoningEffort: 'minimal',
+      },
+    );
+
+    await expect(
+      chatModel._call([new SystemMessage('Return JSON only.'), new HumanMessage('Hello')], {
+        signal: new AbortController().signal,
+      }),
+    ).resolves.toBe('{"ok":true}');
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const firstBody = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    const retryBody = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body));
+
+    expect(firstBody.reasoning).toEqual({ effort: 'minimal' });
+    expect(retryBody.reasoning).toBeUndefined();
   });
 
   it('uses manual JSON extraction for the Codex SSO bridge provider', async () => {

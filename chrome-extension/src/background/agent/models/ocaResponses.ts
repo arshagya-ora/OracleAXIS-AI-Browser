@@ -1,5 +1,5 @@
-import type { ModelConfig, ProviderConfig, ReasoningEffort } from '@extension/storage';
-import { isOpenAIReasoningModelName, normalizeReasoningEffort } from '@extension/storage';
+import type { ApiReasoningEffort, ModelConfig, ProviderConfig, ReasoningEffort } from '@extension/storage';
+import { getCompatibleApiReasoningEffort, isOpenAIReasoningModelName } from '@extension/storage';
 import {
   HumanMessage,
   SystemMessage,
@@ -40,7 +40,7 @@ type ResponsesCreateRequest = {
   model: string;
   stream?: boolean;
   reasoning?: {
-    effort: ReasoningEffort;
+    effort: ApiReasoningEffort;
   };
   temperature?: number;
   top_p?: number;
@@ -203,6 +203,24 @@ function isUnsupportedSamplingParameterError(errorBody: unknown): boolean {
   );
 }
 
+function isUnsupportedReasoningEffortError(errorBody: unknown): boolean {
+  if (!errorBody || typeof errorBody !== 'object') {
+    return false;
+  }
+
+  const candidate = errorBody as { error?: { message?: string; param?: string }; message?: string; param?: string };
+  const param = (candidate.error?.param || candidate.param || '').toLowerCase();
+  const message = (candidate.error?.message || candidate.message || '').toLowerCase();
+
+  return (
+    param === 'reasoning.effort' ||
+    param === 'reasoning_effort' ||
+    ((message.includes('reasoning.effort') || message.includes('reasoning_effort')) &&
+      (message.includes('unsupported') || message.includes('not supported'))) ||
+    (message.includes("'minimal'") && (message.includes('unsupported value') || message.includes('not supported')))
+  );
+}
+
 function stripUtf8Bom(value: string): string {
   return value.charCodeAt(0) === 0xfeff ? value.slice(1) : value;
 }
@@ -353,8 +371,11 @@ function extractOutputText(responseBody: unknown): string {
   throw new Error('Responses API did not return text output');
 }
 
-function normalizeOpenAIReasoningEffort(reasoningEffort: ReasoningEffort | undefined): ReasoningEffort | undefined {
-  return normalizeReasoningEffort(reasoningEffort);
+function normalizeOpenAIReasoningEffort(
+  modelName: string,
+  reasoningEffort: ReasoningEffort | undefined,
+): ApiReasoningEffort | undefined {
+  return getCompatibleApiReasoningEffort(modelName, reasoningEffort);
 }
 
 export class OcaResponsesChatModel extends SimpleChatModel<ResponsesCallOptions> {
@@ -365,7 +386,7 @@ export class OcaResponsesChatModel extends SimpleChatModel<ResponsesCallOptions>
   private readonly queryParams?: Record<string, string>;
   private readonly temperature: number;
   private readonly topP: number;
-  private readonly reasoningEffort?: ReasoningEffort;
+  private readonly reasoningEffort?: ApiReasoningEffort;
 
   constructor(providerConfig: ProviderConfig, modelConfig: ModelConfig) {
     super({});
@@ -377,7 +398,7 @@ export class OcaResponsesChatModel extends SimpleChatModel<ResponsesCallOptions>
     this.queryParams = providerConfig.queryParams;
     this.temperature = (modelConfig.parameters?.temperature ?? 0.1) as number;
     this.topP = (modelConfig.parameters?.topP ?? 0.1) as number;
-    this.reasoningEffort = normalizeOpenAIReasoningEffort(modelConfig.reasoningEffort);
+    this.reasoningEffort = normalizeOpenAIReasoningEffort(this.modelName, modelConfig.reasoningEffort);
   }
 
   _llmType(): string {
@@ -430,6 +451,21 @@ export class OcaResponsesChatModel extends SimpleChatModel<ResponsesCallOptions>
       if (isUnsupportedSamplingParameterError(errorBody) && ('temperature' in requestBody || 'top_p' in requestBody)) {
         delete requestBody.temperature;
         delete requestBody.top_p;
+        response = await sendRequest();
+
+        if (response.ok) {
+          const retryResponseBody = await parseResponsesBody(response);
+          return extractOutputText(retryResponseBody);
+        }
+
+        const retryErrorBody = await parseResponsesBody(response);
+        throw new Error(
+          `Request failed with ${response.status} ${response.statusText}: ${extractErrorMessage(retryErrorBody)}`,
+        );
+      }
+
+      if (isUnsupportedReasoningEffortError(errorBody) && requestBody.reasoning) {
+        delete requestBody.reasoning;
         response = await sendRequest();
 
         if (response.ok) {

@@ -133,6 +133,9 @@
       }
     }
   },
+  "chat_continue_noActiveSession": {
+    "message": "NÃ£o hÃ¡ contexto de tarefa ativo para continuar. Comece com uma instruÃ§Ã£o especÃ­fica (por exemplo: \"abrir amazon\")."
+  },
   "chat_stt_processing": {
     "message": "Processando fala..."
   },

@@ -24,6 +24,12 @@ declare global {
   }
 }
 
+const continuationOnlyInputPattern = /^(continue|resume|proceed|go on)\b/i;
+
+function isContinuationOnlyInput(text: string): boolean {
+  return continuationOnlyInputPattern.test(text.trim());
+}
+
 const SidePanel = () => {
   const progressMessage = 'Showing progress...';
   const [messages, setMessages] = useState<Message[]>([]);
@@ -32,7 +38,6 @@ const SidePanel = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [chatSessions, setChatSessions] = useState<Array<{ id: string; title: string; createdAt: number }>>([]);
-  const [isFollowUpMode, setIsFollowUpMode] = useState(false);
   const [isHistoricalSession, setIsHistoricalSession] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [favoritePrompts, setFavoritePrompts] = useState<FavoritePrompt[]>([]);
@@ -166,20 +171,17 @@ const SidePanel = () => {
               setIsHistoricalSession(false);
               break;
             case ExecutionState.TASK_OK:
-              setIsFollowUpMode(true);
               setInputEnabled(true);
               setShowStopButton(false);
               setIsReplaying(false);
               break;
             case ExecutionState.TASK_FAIL:
-              setIsFollowUpMode(true);
               setInputEnabled(true);
               setShowStopButton(false);
               setIsReplaying(false);
               skip = false;
               break;
             case ExecutionState.TASK_CANCEL:
-              setIsFollowUpMode(false);
               setInputEnabled(true);
               setShowStopButton(false);
               setIsReplaying(false);
@@ -451,7 +453,6 @@ const SidePanel = () => {
       setShowStopButton(true);
 
       // Reset follow-up mode and historical session flags
-      setIsFollowUpMode(false);
       setIsHistoricalSession(false);
 
       const userMessage = {
@@ -574,6 +575,15 @@ const SidePanel = () => {
       return;
     }
 
+    if (!sessionIdRef.current && isContinuationOnlyInput(trimmedText)) {
+      appendMessage({
+        actor: Actors.SYSTEM,
+        content: t('chat_continue_noActiveSession'),
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
     try {
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const tabId = tabs[0]?.id;
@@ -584,8 +594,10 @@ const SidePanel = () => {
       setInputEnabled(false);
       setShowStopButton(true);
 
-      // Create a new chat session for this task if not in follow-up mode
-      if (!isFollowUpMode) {
+      let isNewSession = false;
+
+      // Create a new chat session only when there is no active session
+      if (!sessionIdRef.current) {
         // Use display text for session title if available, otherwise use full text
         const titleText = displayText || text;
         const newSession = await chatHistoryStore.createSession(
@@ -597,6 +609,7 @@ const SidePanel = () => {
         const sessionId = newSession.id;
         setCurrentSessionId(sessionId);
         sessionIdRef.current = sessionId;
+        isNewSession = true;
       }
 
       const userMessage = {
@@ -614,7 +627,9 @@ const SidePanel = () => {
       }
 
       // Send message using the utility function
-      if (isFollowUpMode) {
+      const shouldSendFollowUp = !isNewSession && Boolean(sessionIdRef.current);
+
+      if (shouldSendFollowUp) {
         // Send as follow-up task
         await sendMessage({
           type: 'follow_up_task',
@@ -672,7 +687,6 @@ const SidePanel = () => {
     sessionIdRef.current = null;
     setInputEnabled(true);
     setShowStopButton(false);
-    setIsFollowUpMode(false);
     setIsHistoricalSession(false);
 
     // Disconnect any existing connection
@@ -700,7 +714,6 @@ const SidePanel = () => {
     if (reset) {
       setCurrentSessionId(null);
       setMessages([]);
-      setIsFollowUpMode(false);
       setIsHistoricalSession(false);
     }
   };
@@ -720,7 +733,6 @@ const SidePanel = () => {
       if (fullSession && fullSession.messages.length > 0) {
         setCurrentSessionId(fullSession.id);
         setMessages(fullSession.messages);
-        setIsFollowUpMode(false);
         setIsHistoricalSession(true); // Mark this as a historical session
         console.log('history session selected', sessionId);
       }

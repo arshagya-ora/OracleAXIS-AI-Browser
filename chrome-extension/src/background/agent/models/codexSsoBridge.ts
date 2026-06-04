@@ -1,10 +1,10 @@
 import {
+  type ApiReasoningEffort,
   CODEX_SSO_DEFAULT_BRIDGE_URL,
   type ModelConfig,
   type ProviderConfig,
-  type ReasoningEffort,
+  getCompatibleApiReasoningEffort,
   isOpenAIReasoningModelName,
-  normalizeReasoningEffort,
 } from '@extension/storage';
 import { HumanMessage, SystemMessage, AIMessage, ToolMessage, type BaseMessage } from '@langchain/core/messages';
 import { type BaseChatModelCallOptions, SimpleChatModel } from '@langchain/core/language_models/chat_models';
@@ -39,7 +39,7 @@ type BridgeRequest = {
   max_output_tokens: number;
   model: string;
   reasoning?: {
-    effort: ReasoningEffort;
+    effort: ApiReasoningEffort;
   };
   temperature?: number;
   top_p?: number;
@@ -176,6 +176,24 @@ function extractErrorMessage(errorBody: unknown): string {
   return 'Unknown error';
 }
 
+function isUnsupportedReasoningEffortError(errorBody: unknown): boolean {
+  if (!errorBody || typeof errorBody !== 'object') {
+    return false;
+  }
+
+  const candidate = errorBody as { error?: { message?: string; param?: string }; message?: string; param?: string };
+  const param = (candidate.error?.param || candidate.param || '').toLowerCase();
+  const message = (candidate.error?.message || candidate.message || '').toLowerCase();
+
+  return (
+    param === 'reasoning.effort' ||
+    param === 'reasoning_effort' ||
+    ((message.includes('reasoning.effort') || message.includes('reasoning_effort')) &&
+      (message.includes('unsupported') || message.includes('not supported'))) ||
+    (message.includes("'minimal'") && (message.includes('unsupported value') || message.includes('not supported')))
+  );
+}
+
 async function parseBridgeBody(response: Response): Promise<unknown> {
   const responseText = await response.text();
   if (!responseText.trim()) {
@@ -208,7 +226,7 @@ export class CodexSsoBridgeChatModel extends SimpleChatModel<BridgeCallOptions> 
   private readonly bridgeToken: string;
   private readonly temperature: number;
   private readonly topP: number;
-  private readonly reasoningEffort?: ReasoningEffort;
+  private readonly reasoningEffort?: ApiReasoningEffort;
 
   constructor(providerConfig: ProviderConfig, modelConfig: ModelConfig) {
     super({});
@@ -218,7 +236,7 @@ export class CodexSsoBridgeChatModel extends SimpleChatModel<BridgeCallOptions> 
     this.bridgeToken = providerConfig.bridgeToken || '';
     this.temperature = (modelConfig.parameters?.temperature ?? 0.1) as number;
     this.topP = (modelConfig.parameters?.topP ?? 0.1) as number;
-    this.reasoningEffort = normalizeReasoningEffort(modelConfig.reasoningEffort);
+    this.reasoningEffort = getCompatibleApiReasoningEffort(this.modelName, modelConfig.reasoningEffort);
   }
 
   _llmType(): string {
@@ -253,17 +271,26 @@ export class CodexSsoBridgeChatModel extends SimpleChatModel<BridgeCallOptions> 
       requestBody.top_p = this.topP;
     }
 
-    const response = await fetch(buildBridgeUrl(this.baseUrl), {
-      body: JSON.stringify(requestBody),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-OC-Axis-Bridge-Token': this.bridgeToken,
-      },
-      method: 'POST',
-      signal: options.signal,
-    });
+    const sendRequest = () =>
+      fetch(buildBridgeUrl(this.baseUrl), {
+        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-OC-Axis-Bridge-Token': this.bridgeToken,
+        },
+        method: 'POST',
+        signal: options.signal,
+      });
 
-    const responseBody = await parseBridgeBody(response);
+    let response = await sendRequest();
+    let responseBody = await parseBridgeBody(response);
+
+    if (!response.ok && isUnsupportedReasoningEffortError(responseBody) && requestBody.reasoning) {
+      delete requestBody.reasoning;
+      response = await sendRequest();
+      responseBody = await parseBridgeBody(response);
+    }
+
     if (!response.ok) {
       throw new Error(
         `Codex SSO bridge request failed with ${response.status} ${response.statusText}: ${extractErrorMessage(

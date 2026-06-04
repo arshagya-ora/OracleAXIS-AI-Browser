@@ -95,7 +95,15 @@ export class AgentContext {
 
   async stop() {
     this.stopped = true;
-    setTimeout(() => this.controller.abort(), 300);
+    const currentController = this.controller;
+    setTimeout(() => currentController.abort(), 300);
+  }
+
+  resetForFollowUp() {
+    this.controller = new AbortController();
+    this.stopped = false;
+    this.paused = false;
+    this.consecutiveFailures = 0;
   }
 }
 

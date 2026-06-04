@@ -2,9 +2,9 @@ import {
   type ProviderConfig,
   type ModelConfig,
   ProviderTypeEnum,
+  getCompatibleApiReasoningEffort,
   getProviderTypeByProviderId,
   isOpenAIReasoningModelName,
-  normalizeReasoningEffort,
 } from '@extension/storage';
 import { ChatOpenAI, ChatOpenAICompletions } from '@langchain/openai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
@@ -65,12 +65,12 @@ class ChatLlama extends ChatOpenAICompletions {
   }
 }
 
-function normalizeChatOpenAIReasoningEffort(reasoningEffort: string | undefined) {
-  const normalizedReasoningEffort = normalizeReasoningEffort(reasoningEffort);
-  if (normalizedReasoningEffort === 'xhigh') {
+function normalizeChatOpenAIReasoningEffort(modelName: string, reasoningEffort: string | undefined) {
+  const compatibleReasoningEffort = getCompatibleApiReasoningEffort(modelName, reasoningEffort);
+  if (compatibleReasoningEffort === 'xhigh') {
     return 'high' as const;
   }
-  return normalizedReasoningEffort;
+  return compatibleReasoningEffort;
 }
 
 function createOpenAIChatModel(
@@ -118,11 +118,11 @@ function createOpenAIChatModel(
 
     // Add reasoning_effort parameter for o-series models if specified
     if (modelConfig.reasoningEffort) {
-      const normalizedReasoningEffort = normalizeChatOpenAIReasoningEffort(modelConfig.reasoningEffort);
-      // if it's gpt-5.1, we need to convert minimal to none, it doesn't support minimal
-      if (modelConfig.modelName.includes('gpt-5.1') && normalizedReasoningEffort === 'minimal') {
-        args.modelKwargs.reasoning_effort = 'none';
-      } else {
+      const normalizedReasoningEffort = normalizeChatOpenAIReasoningEffort(
+        modelConfig.modelName,
+        modelConfig.reasoningEffort,
+      );
+      if (normalizedReasoningEffort) {
         args.modelKwargs.reasoning_effort = normalizedReasoningEffort;
       }
     }

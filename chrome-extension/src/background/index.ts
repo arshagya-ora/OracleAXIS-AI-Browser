@@ -27,6 +27,11 @@ let currentExecutor: Executor | null = null;
 let currentPort: chrome.runtime.Port | null = null;
 const SIDE_PANEL_URL = chrome.runtime.getURL('side-panel/index.html');
 
+interface ResolvedExecutorModels {
+  navigatorLLM: BaseChatModel;
+  plannerLLM: BaseChatModel;
+}
+
 // Setup side panel behavior
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => console.error(error));
 
@@ -107,6 +112,8 @@ chrome.runtime.onConnect.addListener(port => {
             // If executor exists, add follow-up task
             if (currentExecutor) {
               await applyFirewallSettings(browserContext);
+              const { navigatorLLM, plannerLLM } = await resolveExecutorModels();
+              currentExecutor.refreshModels(navigatorLLM, plannerLLM);
               currentExecutor.addFollowUpTask(message.task);
               // Re-subscribe to events in case the previous subscription was cleaned up
               subscribeToExecutorEvents(currentExecutor);
@@ -315,6 +322,33 @@ chrome.runtime.onConnect.addListener(port => {
 });
 
 async function setupExecutor(taskId: string, task: string, browserContext: BrowserContext) {
+  const { navigatorLLM, plannerLLM } = await resolveExecutorModels();
+
+  await applyFirewallSettings(browserContext);
+
+  const generalSettings = await generalSettingsStore.getSettings();
+  browserContext.updateConfig({
+    minimumWaitPageLoadTime: generalSettings.minWaitPageLoad / 1000.0,
+    displayHighlights: generalSettings.displayHighlights,
+  });
+
+  const executor = new Executor(task, taskId, browserContext, navigatorLLM, {
+    plannerLLM,
+    agentOptions: {
+      maxSteps: generalSettings.maxSteps,
+      maxFailures: generalSettings.maxFailures,
+      maxActionsPerStep: generalSettings.maxActionsPerStep,
+      useVision: generalSettings.useVision,
+      useVisionForPlanner: true,
+      planningInterval: generalSettings.planningInterval,
+    },
+    generalSettings: generalSettings,
+  });
+
+  return executor;
+}
+
+async function resolveExecutorModels(): Promise<ResolvedExecutorModels> {
   const providers = await llmProviderStore.getAllProviders();
   // if no providers, need to display the options page
   if (Object.keys(providers).length === 0) {
@@ -340,7 +374,7 @@ async function setupExecutor(taskId: string, task: string, browserContext: Brows
   const navigatorProviderConfig = providers[navigatorModel.provider];
   const navigatorLLM = createChatModel(navigatorProviderConfig, navigatorModel);
 
-  let plannerLLM: BaseChatModel | null = null;
+  let plannerLLM: BaseChatModel = navigatorLLM;
   const plannerModel = agentModels[AgentNameEnum.Planner];
   if (plannerModel) {
     // Log the provider config being used for the planner
@@ -348,28 +382,10 @@ async function setupExecutor(taskId: string, task: string, browserContext: Brows
     plannerLLM = createChatModel(plannerProviderConfig, plannerModel);
   }
 
-  await applyFirewallSettings(browserContext);
-
-  const generalSettings = await generalSettingsStore.getSettings();
-  browserContext.updateConfig({
-    minimumWaitPageLoadTime: generalSettings.minWaitPageLoad / 1000.0,
-    displayHighlights: generalSettings.displayHighlights,
-  });
-
-  const executor = new Executor(task, taskId, browserContext, navigatorLLM, {
-    plannerLLM: plannerLLM ?? navigatorLLM,
-    agentOptions: {
-      maxSteps: generalSettings.maxSteps,
-      maxFailures: generalSettings.maxFailures,
-      maxActionsPerStep: generalSettings.maxActionsPerStep,
-      useVision: generalSettings.useVision,
-      useVisionForPlanner: true,
-      planningInterval: generalSettings.planningInterval,
-    },
-    generalSettings: generalSettings,
-  });
-
-  return executor;
+  return {
+    navigatorLLM,
+    plannerLLM,
+  };
 }
 
 async function applyFirewallSettings(browserContext: BrowserContext): Promise<void> {

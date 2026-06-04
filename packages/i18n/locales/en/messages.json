@@ -133,6 +133,9 @@
       }
     }
   },
+  "chat_continue_noActiveSession": {
+    "message": "There is no active task context to continue. Start with a specific instruction (for example: \"open amazon\")."
+  },
   "chat_stt_processing": {
     "message": "Processing speech..."
   },
