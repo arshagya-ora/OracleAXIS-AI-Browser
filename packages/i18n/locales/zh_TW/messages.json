@@ -1,20 +1,20 @@
-{
+﻿{
   "app_metadata_description": {
     "description": "Extension description",
-    "message": "使用 AI 自動化網頁任務！Oracle AXIS 是一款智慧型瀏覽器擴充功能，能協助您擷取資料、填寫表單等。"
+    "message": "ä½¿ç”¨ AI è‡ªå‹•åŒ–ç¶²é ä»»å‹™ï¼Oracle AXIS æ˜¯ä¸€æ¬¾æ™ºæ…§åž‹ç€è¦½å™¨æ“´å……åŠŸèƒ½ï¼Œèƒ½å”åŠ©æ‚¨æ“·å–è³‡æ–™ã€å¡«å¯«è¡¨å–®ç­‰ã€‚"
   },
   "app_metadata_name": {
     "description": "Extension name",
-    "message": "Oracle AXIS：AI 網頁代理程式與自動化"
+    "message": "AXIS GUI Automation Assistant"
   },
   "errors_unknown": {
-    "message": "發生未知錯誤"
+    "message": "ç™¼ç”ŸæœªçŸ¥éŒ¯èª¤"
   },
   "errors_conn_serviceWorker": {
-    "message": "連線至 Service Worker 失敗"
+    "message": "é€£ç·šè‡³ Service Worker å¤±æ•—"
   },
   "errors_cmd_unknown": {
-    "message": "不支援的指令：$COMMAND$。\n\n可用指令：/state、/nohighlight、/replay <historySessionId>",
+    "message": "ä¸æ”¯æ´çš„æŒ‡ä»¤ï¼š$COMMAND$ã€‚\n\nå¯ç”¨æŒ‡ä»¤ï¼š/stateã€/nohighlightã€/replay <historySessionId>",
     "placeholders": {
       "command": {
         "content": "$1",
@@ -23,85 +23,85 @@
     }
   },
   "nav_newChat_a11y": {
-    "message": "新對話"
+    "message": "æ–°å°è©±"
   },
   "nav_loadHistory_a11y": {
-    "message": "載入歷史紀錄"
+    "message": "è¼‰å…¥æ­·å²ç´€éŒ„"
   },
   "nav_settings_a11y": {
-    "message": "設定"
+    "message": "è¨­å®š"
   },
   "nav_back": {
-    "message": "← 返回"
+    "message": "â† è¿”å›ž"
   },
   "nav_back_a11y": {
-    "message": "回到對話"
+    "message": "å›žåˆ°å°è©±"
   },
   "welcome_title": {
-    "message": "歡迎使用 Oracle AXIS！"
+    "message": "æ­¡è¿Žä½¿ç”¨ Oracle AXISï¼"
   },
   "welcome_instruction": {
-    "message": "開始使用前，請先完成 API 金鑰的設定。"
+    "message": "é–‹å§‹ä½¿ç”¨å‰ï¼Œè«‹å…ˆå®Œæˆ API é‡‘é‘°çš„è¨­å®šã€‚"
   },
   "welcome_openSettings": {
-    "message": "開啟設定"
+    "message": "é–‹å•Ÿè¨­å®š"
   },
   "welcome_quickStart": {
-    "message": "快速入門指南"
+    "message": "å¿«é€Ÿå…¥é–€æŒ‡å—"
   },
   "welcome_joinCommunity": {
-    "message": "加入我們的社群"
+    "message": "åŠ å…¥æˆ‘å€‘çš„ç¤¾ç¾¤"
   },
   "status_checkingConfig": {
-    "message": "正在檢查設定..."
+    "message": "æ­£åœ¨æª¢æŸ¥è¨­å®š..."
   },
   "chat_buttons_stop": {
-    "message": "停止"
+    "message": "åœæ­¢"
   },
   "chat_buttons_replay": {
-    "message": "重播"
+    "message": "é‡æ’­"
   },
   "chat_buttons_send": {
-    "message": "傳送"
+    "message": "å‚³é€"
   },
   "chat_input_placeholder": {
-    "message": "有什麼需要協助的嗎？"
+    "message": "æœ‰ä»€éº¼éœ€è¦å”åŠ©çš„å—Žï¼Ÿ"
   },
   "chat_input_form": {
-    "message": "對話輸入表單"
+    "message": "å°è©±è¼¸å…¥è¡¨å–®"
   },
   "chat_input_editor": {
-    "message": "訊息輸入"
+    "message": "è¨Šæ¯è¼¸å…¥"
   },
   "chat_history_title": {
-    "message": "對話歷史紀錄"
+    "message": "å°è©±æ­·å²ç´€éŒ„"
   },
   "chat_history_empty": {
-    "message": "沒有可用的對話歷史紀錄"
+    "message": "æ²’æœ‰å¯ç”¨çš„å°è©±æ­·å²ç´€éŒ„"
   },
   "chat_history_bookmark": {
-    "message": "將工作階段加入書籤"
+    "message": "å°‡å·¥ä½œéšŽæ®µåŠ å…¥æ›¸ç±¤"
   },
   "chat_history_delete": {
-    "message": "刪除工作階段"
+    "message": "åˆªé™¤å·¥ä½œéšŽæ®µ"
   },
   "chat_bookmarks_header": {
-    "message": "快速入門"
+    "message": "å¿«é€Ÿå…¥é–€"
   },
   "chat_bookmarks_saveEdit": {
-    "message": "儲存變更"
+    "message": "å„²å­˜è®Šæ›´"
   },
   "chat_bookmarks_cancelEdit": {
-    "message": "取消變更"
+    "message": "å–æ¶ˆè®Šæ›´"
   },
   "chat_bookmarks_edit": {
-    "message": "編輯書籤標題"
+    "message": "ç·¨è¼¯æ›¸ç±¤æ¨™é¡Œ"
   },
   "chat_bookmarks_delete": {
-    "message": "刪除書籤"
+    "message": "åˆªé™¤æ›¸ç±¤"
   },
   "chat_replay_starting": {
-    "message": "開始重播任務：\n\n\"$TASK$\"",
+    "message": "é–‹å§‹é‡æ’­ä»»å‹™ï¼š\n\n\"$TASK$\"",
     "placeholders": {
       "task": {
         "content": "$1",
@@ -110,7 +110,7 @@
     }
   },
   "chat_replay_failed": {
-    "message": "重播失敗：$ERROR_MESSAGE$",
+    "message": "é‡æ’­å¤±æ•—ï¼š$ERROR_MESSAGE$",
     "placeholders": {
       "error_message": {
         "content": "$1",
@@ -119,13 +119,13 @@
     }
   },
   "chat_replay_invalidArgs": {
-    "message": "參數無效。請使用此格式：/replay <historySessionId>"
+    "message": "åƒæ•¸ç„¡æ•ˆã€‚è«‹ä½¿ç”¨æ­¤æ ¼å¼ï¼š/replay <historySessionId>"
   },
   "chat_replay_disabled": {
-    "message": "重播功能已在一般設定中停用。請在擴充功能的設定中啟用 \"重播歷史任務\" 以使用此功能。"
+    "message": "é‡æ’­åŠŸèƒ½å·²åœ¨ä¸€èˆ¬è¨­å®šä¸­åœç”¨ã€‚è«‹åœ¨æ“´å……åŠŸèƒ½çš„è¨­å®šä¸­å•Ÿç”¨ \"é‡æ’­æ­·å²ä»»å‹™\" ä»¥ä½¿ç”¨æ­¤åŠŸèƒ½ã€‚"
   },
   "chat_replay_noHistory": {
-    "message": "找不到工作階段 \"$SESSION_ID$...\" 的操作歷史紀錄。此工作階段可能未包含可重播的操作。\n\n這可能是因為它本身就是一個重播工作階段 (重播工作階段無法再次重播)，或是在此功能推出之前所建立的。",
+    "message": "æ‰¾ä¸åˆ°å·¥ä½œéšŽæ®µ \"$SESSION_ID$...\" çš„æ“ä½œæ­·å²ç´€éŒ„ã€‚æ­¤å·¥ä½œéšŽæ®µå¯èƒ½æœªåŒ…å«å¯é‡æ’­çš„æ“ä½œã€‚\n\né€™å¯èƒ½æ˜¯å› ç‚ºå®ƒæœ¬èº«å°±æ˜¯ä¸€å€‹é‡æ’­å·¥ä½œéšŽæ®µ (é‡æ’­å·¥ä½œéšŽæ®µç„¡æ³•å†æ¬¡é‡æ’­)ï¼Œæˆ–æ˜¯åœ¨æ­¤åŠŸèƒ½æŽ¨å‡ºä¹‹å‰æ‰€å»ºç«‹çš„ã€‚",
     "placeholders": {
       "session_id": {
         "content": "$1",
@@ -134,274 +134,274 @@
     }
   },
   "chat_continue_noActiveSession": {
-    "message": "目前沒有可繼續的任務上下文。請先輸入明確指令（例如：「打開 amazon」）。"
+    "message": "ç›®å‰æ²’æœ‰å¯ç¹¼çºŒçš„ä»»å‹™ä¸Šä¸‹æ–‡ã€‚è«‹å…ˆè¼¸å…¥æ˜Žç¢ºæŒ‡ä»¤ï¼ˆä¾‹å¦‚ï¼šã€Œæ‰“é–‹ amazonã€ï¼‰ã€‚"
   },
   "chat_stt_processing": {
-    "message": "正在處理語音..."
+    "message": "æ­£åœ¨è™•ç†èªžéŸ³..."
   },
   "chat_stt_recording_stop": {
-    "message": "停止錄音"
+    "message": "åœæ­¢éŒ„éŸ³"
   },
   "chat_stt_input_start": {
-    "message": "開始語音輸入"
+    "message": "é–‹å§‹èªžéŸ³è¼¸å…¥"
   },
   "chat_stt_processingFailed": {
-    "message": "處理語音輸入失敗"
+    "message": "è™•ç†èªžéŸ³è¼¸å…¥å¤±æ•—"
   },
   "chat_stt_model_notFound": {
-    "message": "尚未設定語音轉文字模型，或所選擇的不是 Gemini 模型。請在設定中選擇 Gemini 模型。"
+    "message": "å°šæœªè¨­å®šèªžéŸ³è½‰æ–‡å­—æ¨¡åž‹ï¼Œæˆ–æ‰€é¸æ“‡çš„ä¸æ˜¯ Gemini æ¨¡åž‹ã€‚è«‹åœ¨è¨­å®šä¸­é¸æ“‡ Gemini æ¨¡åž‹ã€‚"
   },
   "chat_stt_recognitionFailed": {
-    "message": "語音辨識失敗"
+    "message": "èªžéŸ³è¾¨è­˜å¤±æ•—"
   },
   "chat_stt_microphone_permissionDenied": {
-    "message": "麥克風存取遭拒。請在瀏覽器設定中啟用麥克風權限。"
+    "message": "éº¥å…‹é¢¨å­˜å–é­æ‹’ã€‚è«‹åœ¨ç€è¦½å™¨è¨­å®šä¸­å•Ÿç”¨éº¥å…‹é¢¨æ¬Šé™ã€‚"
   },
   "chat_stt_microphone_accessFailed": {
-    "message": "無法存取麥克風。"
+    "message": "ç„¡æ³•å­˜å–éº¥å…‹é¢¨ã€‚"
   },
   "chat_stt_microphone_grantPermission": {
-    "message": "請授予麥克風權限。"
+    "message": "è«‹æŽˆäºˆéº¥å…‹é¢¨æ¬Šé™ã€‚"
   },
   "chat_stt_microphone_notFound": {
-    "message": "找不到麥克風。"
+    "message": "æ‰¾ä¸åˆ°éº¥å…‹é¢¨ã€‚"
   },
   "permissions_microphone_title": {
-    "message": "啟用語音輸入"
+    "message": "å•Ÿç”¨èªžéŸ³è¼¸å…¥"
   },
   "permissions_microphone_description": {
-    "message": "Oracle AXIS 需要麥克風存取權限，才能將語音轉換為文字。"
+    "message": "Oracle AXIS éœ€è¦éº¥å…‹é¢¨å­˜å–æ¬Šé™ï¼Œæ‰èƒ½å°‡èªžéŸ³è½‰æ›ç‚ºæ–‡å­—ã€‚"
   },
   "permissions_microphone_grantButton": {
-    "message": "授予麥克風權限"
+    "message": "æŽˆäºˆéº¥å…‹é¢¨æ¬Šé™"
   },
   "permissions_microphone_requesting": {
-    "message": "正在請求麥克風權限..."
+    "message": "æ­£åœ¨è«‹æ±‚éº¥å…‹é¢¨æ¬Šé™..."
   },
   "permissions_microphone_grantedSuccess": {
-    "message": "✅ 已授予麥克風權限！您現在可以使用語音輸入了。"
+    "message": "âœ… å·²æŽˆäºˆéº¥å…‹é¢¨æ¬Šé™ï¼æ‚¨ç¾åœ¨å¯ä»¥ä½¿ç”¨èªžéŸ³è¼¸å…¥äº†ã€‚"
   },
   "permissions_microphone_grantedButton": {
-    "message": "已授予權限"
+    "message": "å·²æŽˆäºˆæ¬Šé™"
   },
   "permissions_microphone_denied": {
-    "message": "權限遭拒。"
+    "message": "æ¬Šé™é­æ‹’ã€‚"
   },
   "permissions_microphone_allowHelp": {
-    "message": "當系統提示授予麥克風存取權限時，請點選 \"允許\" 。"
+    "message": "ç•¶ç³»çµ±æç¤ºæŽˆäºˆéº¥å…‹é¢¨å­˜å–æ¬Šé™æ™‚ï¼Œè«‹é»žé¸ \"å…è¨±\" ã€‚"
   },
   "permissions_microphone_notFound": {
-    "message": "找不到麥克風。請檢查您的音訊裝置。"
+    "message": "æ‰¾ä¸åˆ°éº¥å…‹é¢¨ã€‚è«‹æª¢æŸ¥æ‚¨çš„éŸ³è¨Šè£ç½®ã€‚"
   },
   "permissions_microphone_alreadyGranted": {
-    "message": "✅ 已授予麥克風權限！"
+    "message": "âœ… å·²æŽˆäºˆéº¥å…‹é¢¨æ¬Šé™ï¼"
   },
   "permissions_microphone_alreadyGrantedButton": {
-    "message": "已授予權限"
+    "message": "å·²æŽˆäºˆæ¬Šé™"
   },
   "options_nav_header": {
-    "message": "設定"
+    "message": "è¨­å®š"
   },
   "options_tabs_general": {
-    "message": "一般"
+    "message": "ä¸€èˆ¬"
   },
   "options_tabs_models": {
-    "message": "模型"
+    "message": "æ¨¡åž‹"
   },
   "options_tabs_firewall": {
-    "message": "防火牆"
+    "message": "é˜²ç«ç‰†"
   },
   "options_tabs_help": {
-    "message": "說明"
+    "message": "èªªæ˜Ž"
   },
   "options_general_header": {
-    "message": "一般"
+    "message": "ä¸€èˆ¬"
   },
   "options_general_maxSteps": {
-    "message": "單一任務的步驟上限"
+    "message": "å–®ä¸€ä»»å‹™çš„æ­¥é©Ÿä¸Šé™"
   },
   "options_general_maxSteps_desc": {
-    "message": "限制單一任務的步驟數量"
+    "message": "é™åˆ¶å–®ä¸€ä»»å‹™çš„æ­¥é©Ÿæ•¸é‡"
   },
   "options_general_maxActions": {
-    "message": "單一步驟的動作上限"
+    "message": "å–®ä¸€æ­¥é©Ÿçš„å‹•ä½œä¸Šé™"
   },
   "options_general_maxActions_desc": {
-    "message": "限制單一步驟的動作數量"
+    "message": "é™åˆ¶å–®ä¸€æ­¥é©Ÿçš„å‹•ä½œæ•¸é‡"
   },
   "options_general_maxFailures": {
-    "message": "連續失敗容許次數"
+    "message": "é€£çºŒå¤±æ•—å®¹è¨±æ¬¡æ•¸"
   },
   "options_general_maxFailures_desc": {
-    "message": "在停止執行前，可容許的連續失敗次數"
+    "message": "åœ¨åœæ­¢åŸ·è¡Œå‰ï¼Œå¯å®¹è¨±çš„é€£çºŒå¤±æ•—æ¬¡æ•¸"
   },
   "options_general_enableVision": {
-    "message": "啟用視覺能力"
+    "message": "å•Ÿç”¨è¦–è¦ºèƒ½åŠ›"
   },
   "options_general_enableVision_desc": {
-    "message": "使用大型語言模型的視覺能力 (將會消耗更多的 token 以取得更好的結果)"
+    "message": "ä½¿ç”¨å¤§åž‹èªžè¨€æ¨¡åž‹çš„è¦–è¦ºèƒ½åŠ› (å°‡æœƒæ¶ˆè€—æ›´å¤šçš„ token ä»¥å–å¾—æ›´å¥½çš„çµæžœ)"
   },
   "options_general_displayHighlights": {
-    "message": "顯示醒目標示"
+    "message": "é¡¯ç¤ºé†’ç›®æ¨™ç¤º"
   },
   "options_general_displayHighlights_desc": {
-    "message": "在可互動的元素 (如按鈕、連結等) 上顯示視覺化醒目標示"
+    "message": "åœ¨å¯äº’å‹•çš„å…ƒç´  (å¦‚æŒ‰éˆ•ã€é€£çµç­‰) ä¸Šé¡¯ç¤ºè¦–è¦ºåŒ–é†’ç›®æ¨™ç¤º"
   },
   "options_general_planningInterval": {
-    "message": "重新規劃頻率"
+    "message": "é‡æ–°è¦åŠƒé »çŽ‡"
   },
   "options_general_planningInterval_desc": {
-    "message": "每隔 [Number] 個步驟重新評估並更新計畫"
+    "message": "æ¯éš” [Number] å€‹æ­¥é©Ÿé‡æ–°è©•ä¼°ä¸¦æ›´æ–°è¨ˆç•«"
   },
   "options_general_minWaitPageLoad": {
-    "message": "頁面載入等候時間"
+    "message": "é é¢è¼‰å…¥ç­‰å€™æ™‚é–“"
   },
   "options_general_minWaitPageLoad_desc": {
-    "message": "頁面載入後的最短等候時間 (250-5000 毫秒)"
+    "message": "é é¢è¼‰å…¥å¾Œçš„æœ€çŸ­ç­‰å€™æ™‚é–“ (250-5000 æ¯«ç§’)"
   },
   "options_general_replayHistoricalTasks": {
-    "message": "重播歷史任務（實驗性功能）"
+    "message": "é‡æ’­æ­·å²ä»»å‹™ï¼ˆå¯¦é©—æ€§åŠŸèƒ½ï¼‰"
   },
   "options_general_replayHistoricalTasks_desc": {
-    "message": "啟用儲存與重播代理程式的步驟歷史紀錄 (此為實驗性功能，可能存在問題)"
+    "message": "å•Ÿç”¨å„²å­˜èˆ‡é‡æ’­ä»£ç†ç¨‹å¼çš„æ­¥é©Ÿæ­·å²ç´€éŒ„ (æ­¤ç‚ºå¯¦é©—æ€§åŠŸèƒ½ï¼Œå¯èƒ½å­˜åœ¨å•é¡Œ)"
   },
   "options_models_providers_header": {
-    "message": "LLM 提供者"
+    "message": "LLM æä¾›è€…"
   },
   "options_models_providers_notConfigured": {
-    "message": "尚未設定任何提供者。請新增一個提供者以開始使用。"
+    "message": "å°šæœªè¨­å®šä»»ä½•æä¾›è€…ã€‚è«‹æ–°å¢žä¸€å€‹æä¾›è€…ä»¥é–‹å§‹ä½¿ç”¨ã€‚"
   },
   "options_models_providers_btnCancel": {
-    "message": "取消"
+    "message": "å–æ¶ˆ"
   },
   "options_models_providers_btnSave": {
-    "message": "儲存"
+    "message": "å„²å­˜"
   },
   "options_models_providers_btnDelete": {
-    "message": "刪除"
+    "message": "åˆªé™¤"
   },
   "options_models_providers_setupInstructions": {
-    "message": "請輸入您的 API 金鑰，然後點選 [儲存] 進行設定。"
+    "message": "è«‹è¼¸å…¥æ‚¨çš„ API é‡‘é‘°ï¼Œç„¶å¾Œé»žé¸ [å„²å­˜] é€²è¡Œè¨­å®šã€‚"
   },
   "options_models_providers_custom_name": {
-    "message": "名稱"
+    "message": "åç¨±"
   },
   "options_models_providers_custom_name_desc": {
-    "message": "提供者名稱 (儲存時不允許使用空格)"
+    "message": "æä¾›è€…åç¨± (å„²å­˜æ™‚ä¸å…è¨±ä½¿ç”¨ç©ºæ ¼)"
   },
   "options_models_providers_custom_name_placeholder": {
-    "message": "提供者名稱"
+    "message": "æä¾›è€…åç¨±"
   },
   "options_models_providers_apiKey": {
-    "message": "API 金鑰"
+    "message": "API é‡‘é‘°"
   },
   "options_models_providers_apiKey_placeholder_optional": {
-    "message": "API 金鑰 (選填)"
+    "message": "API é‡‘é‘° (é¸å¡«)"
   },
   "options_models_providers_apiKey_placeholder_required": {
-    "message": "API 金鑰 (必填)"
+    "message": "API é‡‘é‘° (å¿…å¡«)"
   },
   "options_models_providers_apiKey_placeholder_ollama": {
-    "message": "API 金鑰 (Ollama 可留空)"
+    "message": "API é‡‘é‘° (Ollama å¯ç•™ç©º)"
   },
   "options_models_providers_apiKey_hide": {
-    "message": "隱藏 API 金鑰"
+    "message": "éš±è— API é‡‘é‘°"
   },
   "options_models_providers_apiKey_show": {
-    "message": "顯示 API 金鑰"
+    "message": "é¡¯ç¤º API é‡‘é‘°"
   },
   "options_models_selection_header": {
-    "message": "模型選擇"
+    "message": "æ¨¡åž‹é¸æ“‡"
   },
   "options_models_speechToText_header": {
-    "message": "語音轉文字模型"
+    "message": "èªžéŸ³è½‰æ–‡å­—æ¨¡åž‹"
   },
   "options_models_agents_navigator": {
-    "message": "瀏覽網站並執行操作"
+    "message": "ç€è¦½ç¶²ç«™ä¸¦åŸ·è¡Œæ“ä½œ"
   },
   "options_models_agents_planner": {
-    "message": "制定並調整策略以完成任務"
+    "message": "åˆ¶å®šä¸¦èª¿æ•´ç­–ç•¥ä»¥å®Œæˆä»»å‹™"
   },
   "options_models_labels_model": {
-    "message": "模型"
+    "message": "æ¨¡åž‹"
   },
   "options_models_labels_temperature": {
-    "message": "溫度"
+    "message": "æº«åº¦"
   },
   "options_models_labels_topP": {
     "message": "Top P"
   },
   "options_models_labels_reasoning": {
-    "message": "推理"
+    "message": "æŽ¨ç†"
   },
   "options_models_stt_desc": {
-    "message": "設定在使用麥克風功能時，將語音轉換為文字所使用的 Gemini 模型。"
+    "message": "è¨­å®šåœ¨ä½¿ç”¨éº¥å…‹é¢¨åŠŸèƒ½æ™‚ï¼Œå°‡èªžéŸ³è½‰æ›ç‚ºæ–‡å­—æ‰€ä½¿ç”¨çš„ Gemini æ¨¡åž‹ã€‚"
   },
   "options_models_chooseModel": {
-    "message": "選擇模型"
+    "message": "é¸æ“‡æ¨¡åž‹"
   },
   "options_models_addNewProvider": {
-    "message": "新增提供者"
+    "message": "æ–°å¢žæä¾›è€…"
   },
   "options_models_providers_openaiCompatible": {
-    "message": "與 OpenAI 相容的 API 提供者"
+    "message": "èˆ‡ OpenAI ç›¸å®¹çš„ API æä¾›è€…"
   },
   "options_models_providers_baseUrl": {
-    "message": "基礎 URL"
+    "message": "åŸºç¤Ž URL"
   },
   "options_models_providers_endpoint": {
-    "message": "端點"
+    "message": "ç«¯é»ž"
   },
   "options_models_providers_deployment": {
-    "message": "部署"
+    "message": "éƒ¨ç½²"
   },
   "options_models_providers_apiVersion": {
-    "message": "API 版本"
+    "message": "API ç‰ˆæœ¬"
   },
   "options_models_providers_models": {
-    "message": "模型"
+    "message": "æ¨¡åž‹"
   },
   "options_models_providers_placeholders_baseUrl_custom": {
-    "message": "必須提供與 OpenAI 相容的 API 端點"
+    "message": "å¿…é ˆæä¾›èˆ‡ OpenAI ç›¸å®¹çš„ API ç«¯é»ž"
   },
   "options_models_providers_placeholders_baseUrl_azure": {
     "message": "https://YOUR_RESOURCE_NAME.openai.azure.com/"
   },
   "options_models_providers_placeholders_baseUrl_openrouter": {
-    "message": "OpenRouter 基礎 URL (選填，預設為 https://openrouter.ai/api/v1)"
+    "message": "OpenRouter åŸºç¤Ž URL (é¸å¡«ï¼Œé è¨­ç‚º https://openrouter.ai/api/v1)"
   },
   "options_models_providers_placeholders_baseUrl_llama": {
-    "message": "Llama API 基礎 URL (預設為 https://api.llama.com/v1)"
+    "message": "Llama API åŸºç¤Ž URL (é è¨­ç‚º https://api.llama.com/v1)"
   },
   "options_models_providers_placeholders_baseUrl_ollama": {
-    "message": "Ollama 基礎 URL"
+    "message": "Ollama åŸºç¤Ž URL"
   },
   "options_models_providers_placeholders_azureDeployment": {
-    "message": "請輸入 Azure 模型的部署名稱 (例如 gpt-4o, gpt-4o-mini)"
+    "message": "è«‹è¼¸å…¥ Azure æ¨¡åž‹çš„éƒ¨ç½²åç¨± (ä¾‹å¦‚ gpt-4o, gpt-4o-mini)"
   },
   "options_models_providers_placeholders_azureApiVersion": {
-    "message": "例如：2025-04-01-preview"
+    "message": "ä¾‹å¦‚ï¼š2025-04-01-preview"
   },
   "options_models_providers_deployment_desc": {
-    "message": "輸入模型名稱後，按下 Enter 或空格鍵以完成設定。為獲得最佳的相容性，部署名稱建議與 OpenAI 的模型名稱 (例如 gpt-4o) 保持一致。"
+    "message": "è¼¸å…¥æ¨¡åž‹åç¨±å¾Œï¼ŒæŒ‰ä¸‹ Enter æˆ–ç©ºæ ¼éµä»¥å®Œæˆè¨­å®šã€‚ç‚ºç²å¾—æœ€ä½³çš„ç›¸å®¹æ€§ï¼Œéƒ¨ç½²åç¨±å»ºè­°èˆ‡ OpenAI çš„æ¨¡åž‹åç¨± (ä¾‹å¦‚ gpt-4o) ä¿æŒä¸€è‡´ã€‚"
   },
   "options_models_providers_models_instructions": {
-    "message": "輸入後按下 Enter 或空格鍵以新增。"
+    "message": "è¼¸å…¥å¾ŒæŒ‰ä¸‹ Enter æˆ–ç©ºæ ¼éµä»¥æ–°å¢žã€‚"
   },
   "options_models_providers_models_openrouter_empty": {
-    "message": "未選擇任何模型。如有需要，請手動新增模型名稱。"
+    "message": "æœªé¸æ“‡ä»»ä½•æ¨¡åž‹ã€‚å¦‚æœ‰éœ€è¦ï¼Œè«‹æ‰‹å‹•æ–°å¢žæ¨¡åž‹åç¨±ã€‚"
   },
   "options_models_providers_ollama_reminder": {
-    "message": "請務必為 Ollama 伺服器設定環境變數。"
+    "message": "è«‹å‹™å¿…ç‚º Ollama ä¼ºæœå™¨è¨­å®šç’°å¢ƒè®Šæ•¸ã€‚"
   },
   "options_models_providers_ollama_learnMore": {
-    "message": "深入瞭解"
+    "message": "æ·±å…¥çž­è§£"
   },
   "options_models_providers_errors_spacesNotAllowed": {
-    "message": "提供者名稱不允許使用空格。請改用底線或其他字元。"
+    "message": "æä¾›è€…åç¨±ä¸å…è¨±ä½¿ç”¨ç©ºæ ¼ã€‚è«‹æ”¹ç”¨åº•ç·šæˆ–å…¶ä»–å­—å…ƒã€‚"
   },
   "options_models_providers_errors_baseUrlRequired": {
-    "message": "必須為 $PROVIDER$ 提供基礎 URL，請手動輸入。",
+    "message": "å¿…é ˆç‚º $PROVIDER$ æä¾›åŸºç¤Ž URLï¼Œè«‹æ‰‹å‹•è¼¸å…¥ã€‚",
     "placeholders": {
       "provider": {
         "content": "$1",
@@ -410,100 +410,100 @@
     }
   },
   "options_firewall_header": {
-    "message": "防火牆"
+    "message": "é˜²ç«ç‰†"
   },
   "options_firewall_enableToggle": {
-    "message": "啟用防火牆"
+    "message": "å•Ÿç”¨é˜²ç«ç‰†"
   },
   "options_firewall_toggleFirewall_a11y": {
-    "message": "切換防火牆"
+    "message": "åˆ‡æ›é˜²ç«ç‰†"
   },
   "options_firewall_allowList_header": {
-    "message": "允許清單"
+    "message": "å…è¨±æ¸…å–®"
   },
   "options_firewall_allowList_empty": {
-    "message": "允許清單中沒有網域。若允許清單為空，則表示所有未在拒絕清單中的網域都將被允許。"
+    "message": "å…è¨±æ¸…å–®ä¸­æ²’æœ‰ç¶²åŸŸã€‚è‹¥å…è¨±æ¸…å–®ç‚ºç©ºï¼Œå‰‡è¡¨ç¤ºæ‰€æœ‰æœªåœ¨æ‹’çµ•æ¸…å–®ä¸­çš„ç¶²åŸŸéƒ½å°‡è¢«å…è¨±ã€‚"
   },
   "options_firewall_denyList_header": {
-    "message": "拒絕清單"
+    "message": "æ‹’çµ•æ¸…å–®"
   },
   "options_firewall_denyList_empty": {
-    "message": "拒絕清單中沒有網域"
+    "message": "æ‹’çµ•æ¸…å–®ä¸­æ²’æœ‰ç¶²åŸŸ"
   },
   "options_firewall_placeholders_domainUrl": {
-    "message": "請輸入網域或 URL (例如 example.com, localhost, 127.0.0.1)"
+    "message": "è«‹è¼¸å…¥ç¶²åŸŸæˆ– URL (ä¾‹å¦‚ example.com, localhost, 127.0.0.1)"
   },
   "options_firewall_btnAdd": {
-    "message": "新增"
+    "message": "æ–°å¢ž"
   },
   "options_firewall_btnRemove": {
-    "message": "移除"
+    "message": "ç§»é™¤"
   },
   "options_firewall_howItWorks_header": {
-    "message": "防火牆運作原理"
+    "message": "é˜²ç«ç‰†é‹ä½œåŽŸç†"
   },
   "options_firewall_howItWorks": {
-    "message": "允許清單有項目時，會成為嚴格白名單。\n只有符合允許清單的 URL 可以開啟；其他所有 URL 都會被封鎖。\n允許清單有項目時，拒絕清單會被忽略。\n允許清單為空時，拒絕清單會封鎖符合的 URL，其他安全 URL 可以開啟。\n危險 URL 一律會被封鎖。\n項目可符合網域、子網域、完整 URL，以及 host:port 值。\n目前尚不支援萬用字元。"
+    "message": "å…è¨±æ¸…å–®æœ‰é …ç›®æ™‚ï¼Œæœƒæˆç‚ºåš´æ ¼ç™½åå–®ã€‚\nåªæœ‰ç¬¦åˆå…è¨±æ¸…å–®çš„ URL å¯ä»¥é–‹å•Ÿï¼›å…¶ä»–æ‰€æœ‰ URL éƒ½æœƒè¢«å°éŽ–ã€‚\nå…è¨±æ¸…å–®æœ‰é …ç›®æ™‚ï¼Œæ‹’çµ•æ¸…å–®æœƒè¢«å¿½ç•¥ã€‚\nå…è¨±æ¸…å–®ç‚ºç©ºæ™‚ï¼Œæ‹’çµ•æ¸…å–®æœƒå°éŽ–ç¬¦åˆçš„ URLï¼Œå…¶ä»–å®‰å…¨ URL å¯ä»¥é–‹å•Ÿã€‚\nå±éšª URL ä¸€å¾‹æœƒè¢«å°éŽ–ã€‚\né …ç›®å¯ç¬¦åˆç¶²åŸŸã€å­ç¶²åŸŸã€å®Œæ•´ URLï¼Œä»¥åŠ host:port å€¼ã€‚\nç›®å‰å°šä¸æ”¯æ´è¬ç”¨å­—å…ƒã€‚"
   },
   "options_firewall_mode_disabled": {
-    "message": "目前模式：防火牆已停用。安全 URL 可以開啟，但危險 URL 一律會被封鎖。"
+    "message": "ç›®å‰æ¨¡å¼ï¼šé˜²ç«ç‰†å·²åœç”¨ã€‚å®‰å…¨ URL å¯ä»¥é–‹å•Ÿï¼Œä½†å±éšª URL ä¸€å¾‹æœƒè¢«å°éŽ–ã€‚"
   },
   "options_firewall_mode_allowStrict": {
-    "message": "目前模式：嚴格允許清單。只有符合允許清單的 URL 可以開啟；其他所有 URL 都會被封鎖。"
+    "message": "ç›®å‰æ¨¡å¼ï¼šåš´æ ¼å…è¨±æ¸…å–®ã€‚åªæœ‰ç¬¦åˆå…è¨±æ¸…å–®çš„ URL å¯ä»¥é–‹å•Ÿï¼›å…¶ä»–æ‰€æœ‰ URL éƒ½æœƒè¢«å°éŽ–ã€‚"
   },
   "options_firewall_mode_denyOnly": {
-    "message": "目前模式：僅拒絕清單。符合拒絕清單的 URL 會被封鎖；其他安全 URL 可以開啟。"
+    "message": "ç›®å‰æ¨¡å¼ï¼šåƒ…æ‹’çµ•æ¸…å–®ã€‚ç¬¦åˆæ‹’çµ•æ¸…å–®çš„ URL æœƒè¢«å°éŽ–ï¼›å…¶ä»–å®‰å…¨ URL å¯ä»¥é–‹å•Ÿã€‚"
   },
   "options_firewall_mode_open": {
-    "message": "目前模式：開放。尚未設定允許或拒絕規則，因此所有安全 URL 都可以開啟。"
+    "message": "ç›®å‰æ¨¡å¼ï¼šé–‹æ”¾ã€‚å°šæœªè¨­å®šå…è¨±æˆ–æ‹’çµ•è¦å‰‡ï¼Œå› æ­¤æ‰€æœ‰å®‰å…¨ URL éƒ½å¯ä»¥é–‹å•Ÿã€‚"
   },
   "bg_errors_noTabId": {
-    "message": "未提供分頁 ID"
+    "message": "æœªæä¾›åˆ†é  ID"
   },
   "bg_errors_noTaskId": {
-    "message": "未提供任務 ID"
+    "message": "æœªæä¾›ä»»å‹™ ID"
   },
   "bg_errors_noRunningTask": {
-    "message": "沒有執行中的任務"
+    "message": "æ²’æœ‰åŸ·è¡Œä¸­çš„ä»»å‹™"
   },
   "bg_cmd_newTask_noTask": {
-    "message": "未提供任務"
+    "message": "æœªæä¾›ä»»å‹™"
   },
   "bg_cmd_followUpTask_noTask": {
-    "message": "未提供後續任務"
+    "message": "æœªæä¾›å¾ŒçºŒä»»å‹™"
   },
   "bg_cmd_followUpTask_cleaned": {
-    "message": "執行器已被清理，無法新增後續任務。"
+    "message": "åŸ·è¡Œå™¨å·²è¢«æ¸…ç†ï¼Œç„¡æ³•æ–°å¢žå¾ŒçºŒä»»å‹™ã€‚"
   },
   "bg_cmd_resumeTask_noTask": {
-    "message": "沒有可接續的任務。"
+    "message": "æ²’æœ‰å¯æŽ¥çºŒçš„ä»»å‹™ã€‚"
   },
   "bg_cmd_state_printed": {
-    "message": "狀態已輸出至控制台。"
+    "message": "ç‹€æ…‹å·²è¼¸å‡ºè‡³æŽ§åˆ¶å°ã€‚"
   },
   "bg_cmd_state_failed": {
-    "message": "無法取得狀態"
+    "message": "ç„¡æ³•å–å¾—ç‹€æ…‹"
   },
   "bg_cmd_nohighlight_ok": {
-    "message": "醒目標示已移除。"
+    "message": "é†’ç›®æ¨™ç¤ºå·²ç§»é™¤ã€‚"
   },
   "bg_cmd_stt_noAudioData": {
-    "message": "未提供音訊資料"
+    "message": "æœªæä¾›éŸ³è¨Šè³‡æ–™"
   },
   "bg_cmd_stt_failed": {
-    "message": "語音辨識失敗"
+    "message": "èªžéŸ³è¾¨è­˜å¤±æ•—"
   },
   "bg_cmd_replay_noHistory": {
-    "message": "未提供歷史工作階段 ID。"
+    "message": "æœªæä¾›æ­·å²å·¥ä½œéšŽæ®µ IDã€‚"
   },
   "bg_cmd_replay_failed": {
-    "message": "重播失敗"
+    "message": "é‡æ’­å¤±æ•—"
   },
   "bg_setup_noApiKeys": {
-    "message": "請先在設定頁面中完成 API 金鑰的設定。"
+    "message": "è«‹å…ˆåœ¨è¨­å®šé é¢ä¸­å®Œæˆ API é‡‘é‘°çš„è¨­å®šã€‚"
   },
   "bg_setup_noProvider": {
-    "message": "在設定中找不到提供者 $PROVIDER$。",
+    "message": "åœ¨è¨­å®šä¸­æ‰¾ä¸åˆ°æä¾›è€… $PROVIDER$ã€‚",
     "placeholders": {
       "provider": {
         "content": "$1",
@@ -512,22 +512,22 @@
     }
   },
   "bg_setup_noNavigatorModel": {
-    "message": "請先在設定中為導覽代理程式選擇一個模型。"
+    "message": "è«‹å…ˆåœ¨è¨­å®šä¸­ç‚ºå°Žè¦½ä»£ç†ç¨‹å¼é¸æ“‡ä¸€å€‹æ¨¡åž‹ã€‚"
   },
   "exec_errors_maxStepsReached": {
-    "message": "已達步驟上限"
+    "message": "å·²é”æ­¥é©Ÿä¸Šé™"
   },
   "exec_errors_maxFailuresReached": {
-    "message": "已達失敗次數上限。"
+    "message": "å·²é”å¤±æ•—æ¬¡æ•¸ä¸Šé™ã€‚"
   },
   "exec_task_cancel": {
-    "message": "任務已取消"
+    "message": "ä»»å‹™å·²å–æ¶ˆ"
   },
   "exec_task_pause": {
-    "message": "任務已暫停"
+    "message": "ä»»å‹™å·²æš«åœ"
   },
   "exec_task_fail": {
-    "message": "任務失敗：\n\n$ERROR_MESSAGE$",
+    "message": "ä»»å‹™å¤±æ•—ï¼š\n\n$ERROR_MESSAGE$",
     "placeholders": {
       "error_message": {
         "content": "$1",
@@ -536,13 +536,13 @@
     }
   },
   "exec_replay_cancel": {
-    "message": "重播已取消"
+    "message": "é‡æ’­å·²å–æ¶ˆ"
   },
   "exec_replay_ok": {
-    "message": "重播已完成"
+    "message": "é‡æ’­å·²å®Œæˆ"
   },
   "exec_replay_fail": {
-    "message": "重播失敗：\n\n$ERROR_MESSAGE$",
+    "message": "é‡æ’­å¤±æ•—ï¼š\n\n$ERROR_MESSAGE$",
     "placeholders": {
       "error_message": {
         "content": "$1",
@@ -551,13 +551,13 @@
     }
   },
   "exec_replay_historyNotFound": {
-    "message": "找不到歷史紀錄"
+    "message": "æ‰¾ä¸åˆ°æ­·å²ç´€éŒ„"
   },
   "exec_replay_historyEmpty": {
-    "message": "歷史紀錄為空"
+    "message": "æ­·å²ç´€éŒ„ç‚ºç©º"
   },
   "act_searchGoogle_start": {
-    "message": "正在 Google 上搜尋 \"$QUERY$\"",
+    "message": "æ­£åœ¨ Google ä¸Šæœå°‹ \"$QUERY$\"",
     "placeholders": {
       "query": {
         "content": "$1",
@@ -566,7 +566,7 @@
     }
   },
   "act_searchGoogle_ok": {
-    "message": "已在 Google 上搜尋 \"$QUERY$\"",
+    "message": "å·²åœ¨ Google ä¸Šæœå°‹ \"$QUERY$\"",
     "placeholders": {
       "query": {
         "content": "$1",
@@ -575,7 +575,7 @@
     }
   },
   "act_goToUrl_start": {
-    "message": "正在前往 $URL$",
+    "message": "æ­£åœ¨å‰å¾€ $URL$",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -584,7 +584,7 @@
     }
   },
   "act_goToUrl_ok": {
-    "message": "已前往 $URL$",
+    "message": "å·²å‰å¾€ $URL$",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -593,13 +593,13 @@
     }
   },
   "act_goBack_start": {
-    "message": "正在回到上一頁"
+    "message": "æ­£åœ¨å›žåˆ°ä¸Šä¸€é "
   },
   "act_goBack_ok": {
-    "message": "已回到上一頁"
+    "message": "å·²å›žåˆ°ä¸Šä¸€é "
   },
   "act_wait_start": {
-    "message": "等待 $SECONDS$ 秒",
+    "message": "ç­‰å¾… $SECONDS$ ç§’",
     "placeholders": {
       "seconds": {
         "content": "$1",
@@ -608,7 +608,7 @@
     }
   },
   "act_wait_ok": {
-    "message": "已等候 $SECONDS$ 秒",
+    "message": "å·²ç­‰å€™ $SECONDS$ ç§’",
     "placeholders": {
       "seconds": {
         "content": "$1",
@@ -617,7 +617,7 @@
     }
   },
   "act_click_start": {
-    "message": "正在點選索引為 $INDEX$ 的元素",
+    "message": "æ­£åœ¨é»žé¸ç´¢å¼•ç‚º $INDEX$ çš„å…ƒç´ ",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -626,7 +626,7 @@
     }
   },
   "act_errors_elementNotExist": {
-    "message": "索引為 $INDEX$ 的元素不存在，請重試或改用其他操作",
+    "message": "ç´¢å¼•ç‚º $INDEX$ çš„å…ƒç´ ä¸å­˜åœ¨ï¼Œè«‹é‡è©¦æˆ–æ”¹ç”¨å…¶ä»–æ“ä½œ",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -635,7 +635,7 @@
     }
   },
   "act_errors_elementNoLongerAvailable": {
-    "message": "索引為 $INDEX$ 的元素已無法使用，頁面可能已變更",
+    "message": "ç´¢å¼•ç‚º $INDEX$ çš„å…ƒç´ å·²ç„¡æ³•ä½¿ç”¨ï¼Œé é¢å¯èƒ½å·²è®Šæ›´",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -644,7 +644,7 @@
     }
   },
   "act_click_fileUploader": {
-    "message": "索引 $INDEX$ 的元素會開啟檔案上傳對話方塊。如需上傳檔案，請使用指定的檔案上傳功能。",
+    "message": "ç´¢å¼• $INDEX$ çš„å…ƒç´ æœƒé–‹å•Ÿæª”æ¡ˆä¸Šå‚³å°è©±æ–¹å¡Šã€‚å¦‚éœ€ä¸Šå‚³æª”æ¡ˆï¼Œè«‹ä½¿ç”¨æŒ‡å®šçš„æª”æ¡ˆä¸Šå‚³åŠŸèƒ½ã€‚",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -653,7 +653,7 @@
     }
   },
   "act_click_ok": {
-    "message": "已點選索引為 $INDEX$ 的按鈕：$TEXT$",
+    "message": "å·²é»žé¸ç´¢å¼•ç‚º $INDEX$ çš„æŒ‰éˆ•ï¼š$TEXT$",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -666,10 +666,10 @@
     }
   },
   "act_click_newTabOpened": {
-    "message": "已開啟新分頁，正在切換至該分頁"
+    "message": "å·²é–‹å•Ÿæ–°åˆ†é ï¼Œæ­£åœ¨åˆ‡æ›è‡³è©²åˆ†é "
   },
   "act_inputText_start": {
-    "message": "正在於索引為 $INDEX$ 的欄位中輸入文字",
+    "message": "æ­£åœ¨æ–¼ç´¢å¼•ç‚º $INDEX$ çš„æ¬„ä½ä¸­è¼¸å…¥æ–‡å­—",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -678,7 +678,7 @@
     }
   },
   "act_inputText_ok": {
-    "message": "已將 \"$TEXT$\" 輸入至索引為 $INDEX$ 的欄位",
+    "message": "å·²å°‡ \"$TEXT$\" è¼¸å…¥è‡³ç´¢å¼•ç‚º $INDEX$ çš„æ¬„ä½",
     "placeholders": {
       "text": {
         "content": "$1",
@@ -691,7 +691,7 @@
     }
   },
   "act_switchTab_start": {
-    "message": "正在切換至分頁 $TAB_ID$",
+    "message": "æ­£åœ¨åˆ‡æ›è‡³åˆ†é  $TAB_ID$",
     "placeholders": {
       "tab_id": {
         "content": "$1",
@@ -700,7 +700,7 @@
     }
   },
   "act_switchTab_ok": {
-    "message": "已切換至分頁 $TAB_ID$",
+    "message": "å·²åˆ‡æ›è‡³åˆ†é  $TAB_ID$",
     "placeholders": {
       "tab_id": {
         "content": "$1",
@@ -709,7 +709,7 @@
     }
   },
   "act_openTab_start": {
-    "message": "在新分頁開啟 $URL$",
+    "message": "åœ¨æ–°åˆ†é é–‹å•Ÿ $URL$",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -718,7 +718,7 @@
     }
   },
   "act_openTab_ok": {
-    "message": "已在新分頁開啟 $URL$",
+    "message": "å·²åœ¨æ–°åˆ†é é–‹å•Ÿ $URL$",
     "placeholders": {
       "url": {
         "content": "$1",
@@ -727,7 +727,7 @@
     }
   },
   "act_closeTab_start": {
-    "message": "正在關閉分頁 $TAB_ID$",
+    "message": "æ­£åœ¨é—œé–‰åˆ†é  $TAB_ID$",
     "placeholders": {
       "tab_id": {
         "content": "$1",
@@ -736,7 +736,7 @@
     }
   },
   "act_closeTab_ok": {
-    "message": "已關閉分頁 $TAB_ID$",
+    "message": "å·²é—œé–‰åˆ†é  $TAB_ID$",
     "placeholders": {
       "tab_id": {
         "content": "$1",
@@ -745,7 +745,7 @@
     }
   },
   "act_cache_start": {
-    "message": "正在快取結果：$CONTENT$",
+    "message": "æ­£åœ¨å¿«å–çµæžœï¼š$CONTENT$",
     "placeholders": {
       "content": {
         "content": "$1",
@@ -754,7 +754,7 @@
     }
   },
   "act_cache_ok": {
-    "message": "已快取結果：$CONTENT$",
+    "message": "å·²å¿«å–çµæžœï¼š$CONTENT$",
     "placeholders": {
       "content": {
         "content": "$1",
@@ -763,7 +763,7 @@
     }
   },
   "act_scrollToPercent_start": {
-    "message": "正在捲動至 $PERCENT$ 百分比位置",
+    "message": "æ­£åœ¨æ²å‹•è‡³ $PERCENT$ ç™¾åˆ†æ¯”ä½ç½®",
     "placeholders": {
       "percent": {
         "content": "$1",
@@ -772,7 +772,7 @@
     }
   },
   "act_scrollToPercent_ok": {
-    "message": "已捲動至 $PERCENT$ 百分比位置",
+    "message": "å·²æ²å‹•è‡³ $PERCENT$ ç™¾åˆ†æ¯”ä½ç½®",
     "placeholders": {
       "percent": {
         "content": "$1",
@@ -781,31 +781,31 @@
     }
   },
   "act_scrollToTop_start": {
-    "message": "捲動至頂端"
+    "message": "æ²å‹•è‡³é ‚ç«¯"
   },
   "act_scrollToTop_ok": {
-    "message": "已捲動至頂端"
+    "message": "å·²æ²å‹•è‡³é ‚ç«¯"
   },
   "act_scrollToBottom_start": {
-    "message": "捲動至底部"
+    "message": "æ²å‹•è‡³åº•éƒ¨"
   },
   "act_scrollToBottom_ok": {
-    "message": "已捲動至底部"
+    "message": "å·²æ²å‹•è‡³åº•éƒ¨"
   },
   "act_previousPage_start": {
-    "message": "捲動至上一頁"
+    "message": "æ²å‹•è‡³ä¸Šä¸€é "
   },
   "act_previousPage_ok": {
-    "message": "已捲動至上一頁"
+    "message": "å·²æ²å‹•è‡³ä¸Šä¸€é "
   },
   "act_nextPage_start": {
-    "message": "捲動至下一頁"
+    "message": "æ²å‹•è‡³ä¸‹ä¸€é "
   },
   "act_nextPage_ok": {
-    "message": "已捲動至下一頁"
+    "message": "å·²æ²å‹•è‡³ä¸‹ä¸€é "
   },
   "act_errors_alreadyAtTop": {
-    "message": "索引為 $INDEX$ 的元素已在頂端，無法捲動至上一頁",
+    "message": "ç´¢å¼•ç‚º $INDEX$ çš„å…ƒç´ å·²åœ¨é ‚ç«¯ï¼Œç„¡æ³•æ²å‹•è‡³ä¸Šä¸€é ",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -814,10 +814,10 @@
     }
   },
   "act_errors_pageAlreadyAtTop": {
-    "message": "頁面已在頂端，無法捲動至上一頁"
+    "message": "é é¢å·²åœ¨é ‚ç«¯ï¼Œç„¡æ³•æ²å‹•è‡³ä¸Šä¸€é "
   },
   "act_errors_alreadyAtBottom": {
-    "message": "索引為 $INDEX$ 的元素已在底部，無法捲動至下一頁",
+    "message": "ç´¢å¼•ç‚º $INDEX$ çš„å…ƒç´ å·²åœ¨åº•éƒ¨ï¼Œç„¡æ³•æ²å‹•è‡³ä¸‹ä¸€é ",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -826,10 +826,10 @@
     }
   },
   "act_errors_pageAlreadyAtBottom": {
-    "message": "頁面已在底部，無法捲動至下一頁"
+    "message": "é é¢å·²åœ¨åº•éƒ¨ï¼Œç„¡æ³•æ²å‹•è‡³ä¸‹ä¸€é "
   },
   "act_scrollToText_start": {
-    "message": "正在捲動至文字： \"$TEXT$\" ，第 $OCCURRENCE$ 次出現的位置",
+    "message": "æ­£åœ¨æ²å‹•è‡³æ–‡å­—ï¼š \"$TEXT$\" ï¼Œç¬¬ $OCCURRENCE$ æ¬¡å‡ºç¾çš„ä½ç½®",
     "placeholders": {
       "text": {
         "content": "$1",
@@ -842,7 +842,7 @@
     }
   },
   "act_scrollToText_ok": {
-    "message": "已捲動至文字： \"$TEXT$\" ，第 $OCCURRENCE$ 次出現的位置",
+    "message": "å·²æ²å‹•è‡³æ–‡å­—ï¼š \"$TEXT$\" ï¼Œç¬¬ $OCCURRENCE$ æ¬¡å‡ºç¾çš„ä½ç½®",
     "placeholders": {
       "text": {
         "content": "$1",
@@ -855,7 +855,7 @@
     }
   },
   "act_scrollToText_notFound": {
-    "message": "找不到或看不見文字 \"$TEXT$\" (第 $OCCURRENCE$ 次出現)",
+    "message": "æ‰¾ä¸åˆ°æˆ–çœ‹ä¸è¦‹æ–‡å­— \"$TEXT$\" (ç¬¬ $OCCURRENCE$ æ¬¡å‡ºç¾)",
     "placeholders": {
       "text": {
         "content": "$1",
@@ -868,7 +868,7 @@
     }
   },
   "act_scrollToText_failed": {
-    "message": "捲動至文字失敗：$ERROR$",
+    "message": "æ²å‹•è‡³æ–‡å­—å¤±æ•—ï¼š$ERROR$",
     "placeholders": {
       "error": {
         "content": "$1",
@@ -877,7 +877,7 @@
     }
   },
   "act_sendKeys_start": {
-    "message": "傳送按鍵：$KEYS$",
+    "message": "å‚³é€æŒ‰éµï¼š$KEYS$",
     "placeholders": {
       "keys": {
         "content": "$1",
@@ -886,7 +886,7 @@
     }
   },
   "act_sendKeys_ok": {
-    "message": "已傳送按鍵：$KEYS$",
+    "message": "å·²å‚³é€æŒ‰éµï¼š$KEYS$",
     "placeholders": {
       "keys": {
         "content": "$1",
@@ -895,7 +895,7 @@
     }
   },
   "act_getDropdownOptions_start": {
-    "message": "正在從索引為 $INDEX$ 的下拉式選單中取得選項",
+    "message": "æ­£åœ¨å¾žç´¢å¼•ç‚º $INDEX$ çš„ä¸‹æ‹‰å¼é¸å–®ä¸­å–å¾—é¸é …",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -904,10 +904,10 @@
     }
   },
   "act_getDropdownOptions_useExactText": {
-    "message": "請在 select_dropdown_option 中使用完全相符的文字字串"
+    "message": "è«‹åœ¨ select_dropdown_option ä¸­ä½¿ç”¨å®Œå…¨ç›¸ç¬¦çš„æ–‡å­—å­—ä¸²"
   },
   "act_getDropdownOptions_ok": {
-    "message": "已從下拉式選單取得 $COUNT$ 個選項",
+    "message": "å·²å¾žä¸‹æ‹‰å¼é¸å–®å–å¾— $COUNT$ å€‹é¸é …",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -916,10 +916,10 @@
     }
   },
   "act_getDropdownOptions_noOptions": {
-    "message": "在下拉式選單中找不到任何選項"
+    "message": "åœ¨ä¸‹æ‹‰å¼é¸å–®ä¸­æ‰¾ä¸åˆ°ä»»ä½•é¸é …"
   },
   "act_getDropdownOptions_failed": {
-    "message": "無法取得下拉式選單選項：$ERROR$",
+    "message": "ç„¡æ³•å–å¾—ä¸‹æ‹‰å¼é¸å–®é¸é …ï¼š$ERROR$",
     "placeholders": {
       "error": {
         "content": "$1",
@@ -928,7 +928,7 @@
     }
   },
   "act_selectDropdownOption_start": {
-    "message": "正在從索引為 $INDEX$ 的下拉式選單中選取 \"$TEXT$\" 選項",
+    "message": "æ­£åœ¨å¾žç´¢å¼•ç‚º $INDEX$ çš„ä¸‹æ‹‰å¼é¸å–®ä¸­é¸å– \"$TEXT$\" é¸é …",
     "placeholders": {
       "text": {
         "content": "$1",
@@ -941,7 +941,7 @@
     }
   },
   "act_selectDropdownOption_ok": {
-    "message": "已從索引為 $INDEX$ 的下拉式選單中選取 \"$TEXT$\" 選項",
+    "message": "å·²å¾žç´¢å¼•ç‚º $INDEX$ çš„ä¸‹æ‹‰å¼é¸å–®ä¸­é¸å– \"$TEXT$\" é¸é …",
     "placeholders": {
       "text": {
         "content": "$1",
@@ -954,7 +954,7 @@
     }
   },
   "act_selectDropdownOption_notSelect": {
-    "message": "無法選取選項：索引為 $INDEX$ 的元素是 $TAG_NAME$ 而非 SELECT 元素",
+    "message": "ç„¡æ³•é¸å–é¸é …ï¼šç´¢å¼•ç‚º $INDEX$ çš„å…ƒç´ æ˜¯ $TAG_NAME$ è€Œéž SELECT å…ƒç´ ",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -967,7 +967,7 @@
     }
   },
   "act_selectDropdownOption_failed": {
-    "message": "無法選取選項：$ERROR$",
+    "message": "ç„¡æ³•é¸å–é¸é …ï¼š$ERROR$",
     "placeholders": {
       "error": {
         "content": "$1",

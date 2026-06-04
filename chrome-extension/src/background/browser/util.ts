@@ -56,25 +56,27 @@ export function isUrlAllowed(url: string, allowList: string[], denyList: string[
 function matchesUrlList(urlWithoutProtocol: string, host: string, hostname: string, entries: string[]): boolean {
   for (const entry of entries) {
     const normalizedEntry = entry.trim().toLowerCase().replace(/^https?:\/\//, '');
-    if (!normalizedEntry) {
+    const normalizedEntryWithoutTrailingSlash = trimTrailingSlash(normalizedEntry);
+    if (!normalizedEntryWithoutTrailingSlash) {
       continue;
     }
 
-    if (trimTrailingSlash(urlWithoutProtocol) === trimTrailingSlash(normalizedEntry)) {
+    if (trimTrailingSlash(urlWithoutProtocol) === normalizedEntryWithoutTrailingSlash) {
       return true;
     }
 
     // Entries with paths are URL-specific. Host/domain matching only applies
     // to bare host entries such as example.com or 127.0.0.1:3000.
-    if (normalizedEntry.includes('/')) {
+    // Treat a trailing slash-only entry (e.g. example.com/) as a bare host.
+    if (normalizedEntryWithoutTrailingSlash.includes('/')) {
       continue;
     }
 
     if (
-      hostname === normalizedEntry ||
-      host === normalizedEntry ||
-      hostname.endsWith(`.${normalizedEntry}`) ||
-      host.endsWith(`.${normalizedEntry}`)
+      hostname === normalizedEntryWithoutTrailingSlash ||
+      host === normalizedEntryWithoutTrailingSlash ||
+      hostname.endsWith(`.${normalizedEntryWithoutTrailingSlash}`) ||
+      host.endsWith(`.${normalizedEntryWithoutTrailingSlash}`)
     ) {
       return true;
     }

@@ -913,7 +913,7 @@ const SidePanel = () => {
             ) : (
               <>
                 <img src="./oracle-logo.svg" alt="Extension Logo" className="size-6" />
-                <span className="ml-2 font-medium">AXIS: AI Web Agent</span>
+                <span className="ml-2 font-medium">AXIS GUI Automation Assistant</span>
               </>
             )}
           </div>
