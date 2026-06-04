@@ -6,6 +6,7 @@ import {
   wrapUserRequest,
   splitUserTextAndAttachments,
   wrapAttachments,
+  extractPrimaryTaskFile,
 } from '@src/background/agent/messages/utils';
 
 const logger = createLogger('MessageManager');
@@ -144,6 +145,12 @@ export default class MessageManager {
    * @returns A HumanMessage object containing the task instructions
    */
   private static taskInstructions(task: string): HumanMessage {
+    const primaryTaskFile = extractPrimaryTaskFile(task);
+    if (primaryTaskFile) {
+      const content = `Your ultimate task is: """${primaryTaskFile.content}""". If you achieved your ultimate task, stop everything and use the done action in the next step to complete the task. If not, continue as usual.`;
+      return new HumanMessage({ content: wrapUserRequest(content, false) });
+    }
+
     const { userText, attachmentsInner } = splitUserTextAndAttachments(task);
 
     // Filter and wrap user text
@@ -173,6 +180,14 @@ export default class MessageManager {
    * @param newTask - The raw description of the new task
    */
   public addNewTask(newTask: string): void {
+    const primaryTaskFile = extractPrimaryTaskFile(newTask);
+    if (primaryTaskFile) {
+      const content = `Your new ultimate task is: """${primaryTaskFile.content}""". This is a follow-up of the previous tasks. Make sure to take all of the previous context into account and finish your new ultimate task.`;
+      const msg = new HumanMessage({ content: wrapUserRequest(content, false) });
+      this.addMessageWithTokens(msg);
+      return;
+    }
+
     const { userText, attachmentsInner } = splitUserTextAndAttachments(newTask);
 
     // Filter and wrap user text

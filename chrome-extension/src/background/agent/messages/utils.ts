@@ -21,6 +21,14 @@ export const ATTACHED_FILES_TAG_END = '</nano_attached_files>';
 export const FILE_CONTENT_TAG_START = '<nano_file_content>';
 export const FILE_CONTENT_TAG_END = '</nano_file_content>';
 
+export const PRIMARY_TASK_FILE_TAG_START = '<nano_primary_task_file';
+export const PRIMARY_TASK_FILE_TAG_END = '</nano_primary_task_file>';
+
+export interface PrimaryTaskFile {
+  name: string;
+  content: string;
+}
+
 /**
  * Remove think tags from model output
  * Some models use <think> tags for internal reasoning that should be removed
@@ -307,6 +315,58 @@ export function splitUserTextAndAttachments(raw: string): { userText: string; at
   }
 
   return { userText, attachmentsInner };
+}
+
+function decodeXmlAttribute(value: string): string {
+  return value
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * Extract a trusted primary task file payload emitted by the chat input.
+ * The wrapper must be the entire task payload to avoid accidental promotion.
+ */
+export function extractPrimaryTaskFile(raw: string): PrimaryTaskFile | null {
+  const trimmed = raw.trim();
+  const lowerTrimmed = trimmed.toLowerCase();
+
+  if (!lowerTrimmed.startsWith(PRIMARY_TASK_FILE_TAG_START)) {
+    return null;
+  }
+
+  const openingTagEnd = trimmed.indexOf('>');
+  if (openingTagEnd === -1) {
+    return null;
+  }
+
+  const closingTagStart = lowerTrimmed.lastIndexOf(PRIMARY_TASK_FILE_TAG_END);
+  if (closingTagStart === -1 || closingTagStart < openingTagEnd) {
+    return null;
+  }
+
+  const trailingContent = trimmed.slice(closingTagStart + PRIMARY_TASK_FILE_TAG_END.length).trim();
+  if (trailingContent.length > 0) {
+    return null;
+  }
+
+  const openingTag = trimmed.slice(0, openingTagEnd + 1);
+  if (!/^<nano_primary_task_file(?:\s[^>]*)?>$/i.test(openingTag)) {
+    return null;
+  }
+
+  const name = openingTag.match(/\sname="([^"]*)"/i)?.[1] ?? '';
+  const content = trimmed
+    .slice(openingTagEnd + 1, closingTagStart)
+    .replace(/^\r?\n/, '')
+    .replace(/\r?\n$/, '');
+
+  return {
+    name: decodeXmlAttribute(name),
+    content,
+  };
 }
 
 /**

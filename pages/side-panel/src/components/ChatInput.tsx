@@ -20,6 +20,22 @@ interface AttachedFile {
   type: string;
 }
 
+const PRIMARY_TASK_FILE_TAG = 'nano_primary_task_file';
+
+function escapeXmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function escapeNanoWrapperTags(content: string): string {
+  return content.replace(/<\/?nano_[\w-]+(?:\s[^>]*)?>/gi, tag =>
+    tag.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
+  );
+}
+
 export default function ChatInput({
   onSendMessage,
   onStopTask,
@@ -80,21 +96,30 @@ export default function ChatInput({
         // Security: Clearly separate user input from file content
         // The background service will sanitize file content using guardrails
         if (attachedFiles.length > 0) {
-          const fileContents = attachedFiles
-            .map(file => {
-              // Tag file content for background service to identify and sanitize
-              return `\n\n<nano_file_content type="file" name="${file.name}">\n${file.content}\n</nano_file_content>`;
-            })
-            .join('\n');
+          if (!trimmedText && attachedFiles.length === 1) {
+            const file = attachedFiles[0];
+            messageContent =
+              `<${PRIMARY_TASK_FILE_TAG} name="${escapeXmlAttribute(file.name)}">\n` +
+              `${escapeNanoWrapperTags(file.content)}\n` +
+              `</${PRIMARY_TASK_FILE_TAG}>`;
+            displayContent = `Used as task: ${file.name}`;
+          } else {
+            const fileContents = attachedFiles
+              .map(file => {
+                // Tag file content for background service to identify and sanitize
+                return `\n\n<nano_file_content type="file" name="${file.name}">\n${file.content}\n</nano_file_content>`;
+              })
+              .join('\n');
 
-          // Combine user message with tagged file content (for background service)
-          messageContent = trimmedText
-            ? `${trimmedText}\n\n<nano_attached_files>${fileContents}</nano_attached_files>`
-            : `<nano_attached_files>${fileContents}</nano_attached_files>`;
+            // Combine user message with tagged file content (for background service)
+            messageContent = trimmedText
+              ? `${trimmedText}\n\n<nano_attached_files>${fileContents}</nano_attached_files>`
+              : `<nano_attached_files>${fileContents}</nano_attached_files>`;
 
-          // Create display version with only filenames (for UI)
-          const fileList = attachedFiles.map(file => `📎 ${file.name}`).join('\n');
-          displayContent = trimmedText ? `${trimmedText}\n\n${fileList}` : fileList;
+            // Create display version with only filenames (for UI)
+            const fileList = attachedFiles.map(file => `📎 ${file.name}`).join('\n');
+            displayContent = trimmedText ? `${trimmedText}\n\n${fileList}` : fileList;
+          }
         }
 
         onSendMessage(messageContent, displayContent);
