@@ -26,6 +26,7 @@ export enum ProviderTypeEnum {
 }
 
 export type ReasoningEffort = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+export type ApiReasoningEffort = 'none' | ReasoningEffort;
 
 export function normalizeReasoningEffort(value: string | undefined): ReasoningEffort | undefined {
   if (!value) {
@@ -60,10 +61,35 @@ export function normalizeReasoningModelName(modelName: string): string {
   return modelName;
 }
 
+export function isMinimalReasoningEffortSupported(modelName: string): boolean {
+  const normalizedModelName = normalizeReasoningModelName(modelName).toLowerCase();
+  return !(
+    normalizedModelName.includes('gpt-5.1') ||
+    normalizedModelName.includes('gpt-5.3-codex')
+  );
+}
+
+export function getCompatibleApiReasoningEffort(
+  modelName: string,
+  reasoningEffort: string | undefined,
+): ApiReasoningEffort | undefined {
+  const normalizedReasoningEffort = normalizeReasoningEffort(reasoningEffort);
+  if (!normalizedReasoningEffort) {
+    return undefined;
+  }
+
+  if (normalizedReasoningEffort === 'minimal' && !isMinimalReasoningEffortSupported(modelName)) {
+    return 'none';
+  }
+
+  return normalizedReasoningEffort;
+}
+
 export function isOpenAIReasoningModelName(modelName: string): boolean {
   const normalizedModelName = normalizeReasoningModelName(modelName);
   return (
     normalizedModelName.startsWith('o') ||
+    normalizedModelName.startsWith('gpt5') ||
     (normalizedModelName.startsWith('gpt-5') && !normalizedModelName.startsWith('gpt-5-chat'))
   );
 }

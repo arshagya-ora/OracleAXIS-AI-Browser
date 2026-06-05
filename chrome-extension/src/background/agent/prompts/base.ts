@@ -2,6 +2,7 @@ import { HumanMessage, type SystemMessage } from '@langchain/core/messages';
 import type { AgentContext } from '@src/background/agent/types';
 import { wrapUntrustedContent } from '../messages/utils';
 import { createLogger } from '@src/background/log';
+import { type BrowserState, URLNotAllowedError } from '@src/background/browser/views';
 
 const logger = createLogger('BasePrompt');
 /**
@@ -27,7 +28,19 @@ abstract class BasePrompt {
    * @returns HumanMessage from LangChain
    */
   async buildBrowserStateUserMessage(context: AgentContext): Promise<HumanMessage> {
-    const browserState = await context.browserContext.getState(context.options.useVision);
+    let browserState: BrowserState;
+    try {
+      browserState = await context.browserContext.getState(context.options.useVision);
+    } catch (error) {
+      if (error instanceof URLNotAllowedError) {
+        // A blocked current tab can be redirected to a safe page by firewall checks.
+        // Retry once so the navigator can proceed with the first explicit navigation step.
+        logger.warning('Current URL blocked by firewall while building state; retrying after redirect');
+        browserState = await context.browserContext.getState(context.options.useVision);
+      } else {
+        throw error;
+      }
+    }
     const rawElementsText = browserState.elementTree.clickableElementsToString(context.options.includeAttributes);
 
     let formattedElementsText = '';

@@ -26,6 +26,7 @@ import {
   getDefaultDisplayNameFromProviderId,
   getDefaultProviderConfig,
   getDefaultAgentModelParams,
+  isMinimalReasoningEffortSupported,
   isOpenAIReasoningModelName,
   normalizeReasoningEffort,
   type CodexImportPreview,
@@ -63,11 +64,17 @@ function getDefaultReasoningEffort(agentName: AgentNameEnum, modelValue: string)
     return 'xhigh';
   }
 
+  if (!isMinimalReasoningEffortSupported(modelValue)) {
+    return 'low';
+  }
+
   return agentName === AgentNameEnum.Planner ? 'low' : 'minimal';
 }
 
 function getReasoningOptions(modelValue: string): ReasoningEffort[] {
-  const options: ReasoningEffort[] = ['minimal', 'low', 'medium', 'high'];
+  const options: ReasoningEffort[] = isMinimalReasoningEffortSupported(modelValue)
+    ? ['minimal', 'low', 'medium', 'high']
+    : ['low', 'medium', 'high'];
   if (isCodexImportedProviderModel(modelValue)) {
     return [...options, 'xhigh'];
   }

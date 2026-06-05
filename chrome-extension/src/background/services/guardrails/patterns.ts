@@ -68,6 +68,12 @@ export const SECURITY_PATTERNS: SecurityPattern[] = [
     replacement: '',
   },
   {
+    pattern: /\bnano[-_]+primary[-_]+task[-_]+file\b/gi,
+    type: ThreatType.PROMPT_INJECTION,
+    description: 'Reference to primary task file',
+    replacement: '',
+  },
+  {
     pattern: /\buser[-_]+request\b/gi,
     type: ThreatType.PROMPT_INJECTION,
     description: 'Reference to user request',
@@ -139,6 +145,7 @@ export const PRESERVED_TAGS = [
   'nano_user_request',
   'nano_attached_files',
   'nano_file_content',
+  'nano_primary_task_file',
 ];
 
 /**

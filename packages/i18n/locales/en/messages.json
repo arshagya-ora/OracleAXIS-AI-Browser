@@ -5,7 +5,7 @@
   },
   "app_metadata_name": {
     "description": "Extension name",
-    "message": "Oracle AXIS: AI Web Agent & Automation"
+    "message": "AXIS GUI Automation Assistant"
   },
   "errors_unknown": {
     "message": "Unknown error occurred"
@@ -132,6 +132,9 @@
         "example": "abc123def456789"
       }
     }
+  },
+  "chat_continue_noActiveSession": {
+    "message": "There is no active task context to continue. Start with a specific instruction (for example: \"open amazon\")."
   },
   "chat_stt_processing": {
     "message": "Processing speech..."

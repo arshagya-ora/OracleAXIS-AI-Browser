@@ -23,6 +23,20 @@ describe('isUrlAllowed firewall priority', () => {
     expect(isUrlAllowed('http://allowed.example.com:31800/', ['allowed.example.com:31800'], [])).toBe(true);
   });
 
+  it('treats a host allow-list entry with trailing slash as host-wide', () => {
+    expect(isUrlAllowed('https://www.google.com/search?q=oracle', ['www.google.com/'], [])).toBe(true);
+  });
+
+  it('treats a host:port allow-list entry with trailing slash as host-wide', () => {
+    expect(
+      isUrlAllowed(
+        'http://100.77.16.179:31800/?root=configurations%2Fpolicy%2FurspRule',
+        ['100.77.16.179:31800/'],
+        [],
+      ),
+    ).toBe(true);
+  });
+
   it('uses the deny list when the allow list is empty', () => {
     expect(isUrlAllowed('https://example.com', [], ['example.com'])).toBe(false);
   });
