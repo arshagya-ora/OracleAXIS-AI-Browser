@@ -69,4 +69,16 @@ export interface ChatHistoryStorage {
 
   // Load the history of the agent's state
   loadAgentStepHistory: (sessionId: string) => Promise<ChatAgentStepHistory | null>;
+
+  // Delete only the replayable agent-step history for a chat session
+  deleteAgentStepHistory: (sessionId: string) => Promise<void>;
+
+  // Mark a session as explicitly saved into replay history
+  markReplaySession: (sessionId: string) => Promise<void>;
+
+  // Remove a session from replay history without deleting chat messages
+  unmarkReplaySession: (sessionId: string) => Promise<void>;
+
+  // Get the list of sessions explicitly saved into replay history
+  getReplaySessionIds: () => Promise<string[]>;
 }

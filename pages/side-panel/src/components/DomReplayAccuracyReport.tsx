@@ -69,11 +69,11 @@ const Metric = ({
   value: string | number;
   isDarkMode: boolean;
 }) => (
-  <div className={`rounded border p-3 ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-white'}`}>
+  <div className={`rounded border p-3 ${isDarkMode ? 'border-ebony-muted bg-ebony-light' : 'border-warm-border bg-white'}`}>
     <div className={`text-[11px] uppercase tracking-widest ${isDarkMode ? 'text-[#8C8580]' : 'text-[#8A827A]'}`}>
       {label}
     </div>
-    <div className={`mt-1 text-xl font-semibold ${isDarkMode ? 'text-[#F5F2ED]' : 'text-[#2D2B29]'}`}>{value}</div>
+    <div className={`mt-1 text-xl font-semibold ${isDarkMode ? 'text-[#F5F2ED]' : 'text-ebony'}`}>{value}</div>
   </div>
 );
 
@@ -89,7 +89,7 @@ const DomReplayAccuracyReport = ({
   const visibleResults = report?.results.slice(0, 25) ?? [];
 
   return (
-    <div className={`h-full overflow-y-auto p-4 ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+    <div className={`h-full overflow-y-auto p-4 ${isDarkMode ? 'text-[#D4CFC9]' : 'text-ebony'}`}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-widest">DOM Accuracy Report</h2>
@@ -100,8 +100,8 @@ const DomReplayAccuracyReport = ({
           onClick={onBack}
           className={`rounded border px-3 py-1.5 text-xs font-medium ${
             isDarkMode
-              ? 'border-[#4A4644] text-[#D4CFC9] hover:bg-[#3A3836]'
-              : 'border-[#E0DDD5] text-[#2D2B29] hover:bg-[#F8F7F3]'
+              ? 'border-ebony-muted text-[#D4CFC9] hover:bg-ebony-light'
+              : 'border-warm-border text-ebony hover:bg-canvas'
           }`}>
           Back
         </button>
@@ -109,7 +109,7 @@ const DomReplayAccuracyReport = ({
 
       {isLoading && (
         <div
-          className={`rounded border p-4 text-sm ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-white'}`}>
+          className={`rounded border p-4 text-sm ${isDarkMode ? 'border-ebony-muted bg-ebony-light' : 'border-warm-border bg-white'}`}>
           Checking saved DOM references against the current page...
         </div>
       )}
@@ -117,7 +117,7 @@ const DomReplayAccuracyReport = ({
       {!isLoading && error && (
         <div
           className={`rounded border p-4 text-sm ${
-            isDarkMode ? 'border-[#7F2A1D] bg-[#4A1F1A] text-[#FCA5A5]' : 'border-[#F2B8AE] bg-[#FCEBE8] text-[#9E3929]'
+            isDarkMode ? 'border-[#7F2A1D] bg-[#4A1F1A] text-[#FCA5A5]' : 'border-[#F2B8AE] bg-[#FCEBE8] text-oracle-red-dark'
           }`}>
           {error}
         </div>
@@ -135,10 +135,10 @@ const DomReplayAccuracyReport = ({
                   ? 'border-[#7F2A1D] bg-[#4A1F1A]'
                   : 'border-[#F2B8AE] bg-[#FCEBE8]'
             }`}>
-            <div className={`text-sm font-semibold ${passed ? (isDarkMode ? 'text-[#86EFAC]' : 'text-[#087443]') : isDarkMode ? 'text-[#FCA5A5]' : 'text-[#9E3929]'}`}>
+            <div className={`text-sm font-semibold ${passed ? (isDarkMode ? 'text-[#86EFAC]' : 'text-[#087443]') : isDarkMode ? 'text-[#FCA5A5]' : 'text-oracle-red-dark'}`}>
               {passed ? 'Ready for script validation' : 'Needs review before script validation'}
             </div>
-            <p className={`mt-1 text-xs ${passed ? (isDarkMode ? 'text-[#B7F7CF]' : 'text-[#087443]') : isDarkMode ? 'text-[#FECACA]' : 'text-[#9E3929]'}`}>
+            <p className={`mt-1 text-xs ${passed ? (isDarkMode ? 'text-[#B7F7CF]' : 'text-[#087443]') : isDarkMode ? 'text-[#FECACA]' : 'text-oracle-red-dark'}`}>
               Target threshold is {PASS_THRESHOLD}% with no ambiguous matches.
             </p>
           </div>
@@ -155,7 +155,7 @@ const DomReplayAccuracyReport = ({
           {report.totalTargets === 0 && (
             <div
               className={`rounded border p-4 text-sm ${
-                isDarkMode ? 'border-[#4A4644] bg-[#3A3836] text-[#8C8580]' : 'border-[#E0DDD5] bg-white text-[#8A827A]'
+                isDarkMode ? 'border-ebony-muted bg-ebony-light text-[#8C8580]' : 'border-warm-border bg-white text-[#8A827A]'
               }`}>
               No saved DOM interaction targets were found for this history session.
             </div>
@@ -169,7 +169,7 @@ const DomReplayAccuracyReport = ({
                   <div
                     key={`${failure.stepIndex}-${failure.actionIndex}-${failure.status}`}
                     className={`rounded border p-3 text-xs ${
-                      isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-white'
+                      isDarkMode ? 'border-ebony-muted bg-ebony-light' : 'border-warm-border bg-white'
                     }`}>
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">
@@ -196,7 +196,7 @@ const DomReplayAccuracyReport = ({
                   <div
                     key={`${result.stepIndex}-${result.actionIndex}-${result.status}-${result.currentIndex ?? 'none'}`}
                     className={`rounded border p-3 text-xs ${
-                      isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-white'
+                      isDarkMode ? 'border-ebony-muted bg-ebony-light' : 'border-warm-border bg-white'
                     }`}>
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">

@@ -16,6 +16,10 @@ interface ChatHistoryListProps {
   onSessionBookmark: (sessionId: string) => void;
   onSessionAccuracy?: (sessionId: string) => void;
   accuracyLoadingSessionId?: string | null;
+  title?: string;
+  emptyMessage?: string;
+  showBookmark?: boolean;
+  showAccuracy?: boolean;
   visible: boolean;
   isDarkMode?: boolean;
 }
@@ -27,6 +31,10 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
   onSessionBookmark,
   onSessionAccuracy,
   accuracyLoadingSessionId = null,
+  title = t('chat_history_title'),
+  emptyMessage = t('chat_history_empty'),
+  showBookmark = true,
+  showAccuracy = true,
   visible,
   isDarkMode = false,
 }) => {
@@ -36,16 +44,18 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
     const date = new Date(timestamp);
     return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   };
+  const titlePaddingClass = showAccuracy || showBookmark ? 'pr-20' : 'pr-8';
+  const accuracyPositionClass = showBookmark ? 'right-14' : 'right-8';
 
   return (
     <div className="h-full overflow-y-auto p-4">
-      <h2 className={`mb-4 text-sm font-semibold uppercase tracking-widest ${isDarkMode ? 'text-[#C4BFBA]' : 'text-[#6B6460]'}`}>
-        {t('chat_history_title')}
+      <h2 className={`mb-4 text-sm font-semibold uppercase tracking-widest ${isDarkMode ? 'text-warm-gray' : 'text-warm-text'}`}>
+        {title}
       </h2>
       {sessions.length === 0 ? (
         <div
-          className={`rounded border p-4 text-center text-sm ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836] text-[#6B6460]' : 'border-[#E0DDD5] bg-white text-[#A09A94]'}`}>
-          {t('chat_history_empty')}
+          className={`rounded border p-4 text-center text-sm ${isDarkMode ? 'border-ebony-muted bg-ebony-light text-warm-text' : 'border-warm-border bg-white text-[#A09A94]'}`}>
+          {emptyMessage}
         </div>
       ) : (
         <div className="space-y-2">
@@ -54,29 +64,29 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
               key={session.id}
               className={`group relative rounded border transition-colors ${
                 isDarkMode
-                  ? 'border-[#4A4644] bg-[#3A3836] hover:border-[#C74634]'
-                  : 'border-[#E0DDD5] bg-white hover:border-[#C74634]'
+                  ? 'border-ebony-muted bg-ebony-light hover:border-oracle-red'
+                  : 'border-warm-border bg-white hover:border-oracle-red'
               } p-3`}>
               <button onClick={() => onSessionSelect(session.id)} className="w-full text-left" type="button">
-                <h3 className={`pr-20 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                <h3 className={`${titlePaddingClass} text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-ebony'}`}>
                   {session.title}
                 </h3>
-                <p className={`mt-1 text-xs ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>
+                <p className={`mt-1 text-xs ${isDarkMode ? 'text-warm-text' : 'text-[#A09A94]'}`}>
                   {formatDate(session.createdAt)}
                 </p>
               </button>
 
               {/* Accuracy button - top right */}
-              {onSessionAccuracy && (
+              {showAccuracy && onSessionAccuracy && (
                 <button
                   onClick={e => {
                     e.stopPropagation();
                     onSessionAccuracy(session.id);
                   }}
-                  className={`absolute right-14 top-2 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 ${
+                  className={`absolute ${accuracyPositionClass} top-2 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 ${
                     isDarkMode
-                      ? 'text-[#C74634] hover:bg-[#4A4644]'
-                      : 'text-[#C74634] hover:bg-[#F8F7F3]'
+                      ? 'text-oracle-red hover:bg-ebony-muted'
+                      : 'text-oracle-red hover:bg-canvas'
                   }`}
                   aria-label="Check DOM replay accuracy"
                   title="Check DOM replay accuracy"
@@ -87,7 +97,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
               )}
 
               {/* Bookmark button - top right */}
-              {onSessionBookmark && (
+              {showBookmark && onSessionBookmark && (
                 <button
                   onClick={e => {
                     e.stopPropagation();
@@ -95,8 +105,8 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                   }}
                   className={`absolute right-8 top-2 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 ${
                     isDarkMode
-                      ? 'text-[#C74634] hover:bg-[#4A4644]'
-                      : 'text-[#C74634] hover:bg-[#F8F7F3]'
+                      ? 'text-oracle-red hover:bg-ebony-muted'
+                      : 'text-oracle-red hover:bg-canvas'
                   }`}
                   aria-label={t('chat_history_bookmark')}
                   type="button">
@@ -112,8 +122,8 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                 }}
                 className={`absolute right-2 top-2 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 ${
                   isDarkMode
-                    ? 'text-[#6B6460] hover:bg-[#4A4644] hover:text-[#C4BFBA]'
-                    : 'text-[#A09A94] hover:bg-[#F8F7F3] hover:text-[#2D2B29]'
+                    ? 'text-warm-text hover:bg-ebony-muted hover:text-warm-gray'
+                    : 'text-[#A09A94] hover:bg-canvas hover:text-ebony'
                 }`}
                 aria-label={t('chat_history_delete')}
                 type="button">

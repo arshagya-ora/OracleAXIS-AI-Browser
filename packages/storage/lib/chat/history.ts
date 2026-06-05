@@ -11,9 +11,15 @@ import type {
 
 // Key for storing chat session metadata
 const CHAT_SESSIONS_META_KEY = 'chat_sessions_meta';
+const CHAT_REPLAY_SESSIONS_KEY = 'chat_replay_sessions';
 
 // Create storage for session metadata
 const chatSessionsMetaStorage = createStorage<ChatSessionMetadata[]>(CHAT_SESSIONS_META_KEY, [], {
+  storageEnum: StorageEnum.Local,
+  liveUpdate: true,
+});
+
+const chatReplaySessionsStorage = createStorage<string[]>(CHAT_REPLAY_SESSIONS_KEY, [], {
   storageEnum: StorageEnum.Local,
   liveUpdate: true,
 });
@@ -156,6 +162,7 @@ export function createChatHistoryStorage(): ChatHistoryStorage {
     deleteSession: async (sessionId: string): Promise<void> => {
       // Remove session from metadata
       await chatSessionsMetaStorage.set(prevSessions => prevSessions.filter(session => session.id !== sessionId));
+      await chatReplaySessionsStorage.set(prevSessionIds => prevSessionIds.filter(id => id !== sessionId));
 
       // Remove the session's messages
       const messagesStorage = getSessionMessagesStorage(sessionId);
@@ -247,6 +254,29 @@ export function createChatHistoryStorage(): ChatHistoryStorage {
       if (!history || !history.task || !history.timestamp || history.history === '' || history.history === '[]')
         return null;
       return history;
+    },
+
+    deleteAgentStepHistory: async (sessionId: string): Promise<void> => {
+      const agentStepHistoryStorage = getSessionAgentStepHistoryStorage(sessionId);
+      await agentStepHistoryStorage.set({
+        task: '',
+        history: '',
+        timestamp: 0,
+      });
+    },
+
+    markReplaySession: async (sessionId: string): Promise<void> => {
+      await chatReplaySessionsStorage.set(prevSessionIds =>
+        prevSessionIds.includes(sessionId) ? prevSessionIds : [...prevSessionIds, sessionId],
+      );
+    },
+
+    unmarkReplaySession: async (sessionId: string): Promise<void> => {
+      await chatReplaySessionsStorage.set(prevSessionIds => prevSessionIds.filter(id => id !== sessionId));
+    },
+
+    getReplaySessionIds: async (): Promise<string[]> => {
+      return await chatReplaySessionsStorage.get();
     },
   };
 }

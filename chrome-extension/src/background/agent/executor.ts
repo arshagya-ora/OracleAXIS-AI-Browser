@@ -110,6 +110,58 @@ export class Executor {
     this.context.actionResults = this.context.actionResults.filter(result => result.includeInMemory);
   }
 
+  setReplayHistoricalTasksEnabled(enabled: boolean): void {
+    if (this.generalSettings) {
+      this.generalSettings.replayHistoricalTasks = enabled;
+    }
+  }
+
+  private analyzeReplayHistory(history: AgentStepHistory): {
+    concreteActionCount: number;
+    interactionActionCount: number;
+    hasDoneAction: boolean;
+  } {
+    const interactionActions = new Set(['click_element', 'input_text', 'select_dropdown_option', 'send_keys']);
+    let concreteActionCount = 0;
+    let interactionActionCount = 0;
+    let hasDoneAction = false;
+
+    for (const step of history.history) {
+      if (!step.modelOutput) {
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(step.modelOutput) as { action?: Array<Record<string, unknown> | null> | null };
+        const actions = parsed.action ?? [];
+        for (const action of actions) {
+          if (!action) {
+            continue;
+          }
+
+          const actionName = Object.keys(action)[0];
+          if (!actionName) {
+            continue;
+          }
+
+          if (actionName === 'done') {
+            hasDoneAction = true;
+            continue;
+          }
+
+          concreteActionCount++;
+          if (interactionActions.has(actionName)) {
+            interactionActionCount++;
+          }
+        }
+      } catch {
+        // Replay execution handles malformed steps later; this is only a quick quality check.
+      }
+    }
+
+    return { concreteActionCount, interactionActionCount, hasDoneAction };
+  }
+
   /**
    * Check if task is complete based on planner output and handle completion
    */
@@ -373,6 +425,12 @@ export class Executor {
       if (history.history.length === 0) {
         throw new Error(t('exec_replay_historyEmpty'));
       }
+      const replayAnalysis = this.analyzeReplayHistory(history);
+      if (replayAnalysis.hasDoneAction && replayAnalysis.interactionActionCount === 0) {
+        throw new Error(
+          'This replay history is incomplete. It contains a saved "done" result but no recorded click or typing actions to reproduce.',
+        );
+      }
       logger.debug(`🔄 Replaying history: ${JSON.stringify(history, null, 2)}`);
       this.context.emitEvent(Actors.SYSTEM, ExecutionState.TASK_START, this.context.taskId);
 
@@ -397,9 +455,22 @@ export class Executor {
 
         results.push(...stepResults);
 
+        if (stepResults.length === 0) {
+          throw new Error(`Replay step ${i + 1} did not execute any actions`);
+        }
+
+        const failedResult = stepResults.find(result => result.error);
+        if (failedResult?.error) {
+          throw new Error(failedResult.error);
+        }
+
         // If stopped during execution, break the loop
         if (this.context.stopped) {
           break;
+        }
+
+        if (i < history.history.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, delayBetweenActions * 1000));
         }
       }
 

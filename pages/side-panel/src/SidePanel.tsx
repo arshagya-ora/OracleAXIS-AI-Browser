@@ -3,8 +3,14 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { RxDiscordLogo } from 'react-icons/rx';
 import { FiSettings } from 'react-icons/fi';
 import { PiPlusBold } from 'react-icons/pi';
-import { GrHistory } from 'react-icons/gr';
-import { type Message, Actors, chatHistoryStore, agentModelStore, generalSettingsStore } from '@extension/storage';
+import { BsThreeDotsVertical } from 'react-icons/bs';
+import {
+  type ChatSessionMetadata,
+  type Message,
+  Actors,
+  chatHistoryStore,
+  agentModelStore,
+} from '@extension/storage';
 import favoritesStorage, { type FavoritePrompt } from '@extension/storage/lib/prompt/favorites';
 import { t } from '@extension/i18n';
 import MessageList from './components/MessageList';
@@ -31,14 +37,18 @@ const SidePanel = () => {
   const [showStopButton, setShowStopButton] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
-  const [chatSessions, setChatSessions] = useState<Array<{ id: string; title: string; createdAt: number }>>([]);
+  const [showReplayHistory, setShowReplayHistory] = useState(false);
+  const [chatSessions, setChatSessions] = useState<ChatSessionMetadata[]>([]);
+  const [replaySessions, setReplaySessions] = useState<ChatSessionMetadata[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isRecordArmed, setIsRecordArmed] = useState(false);
+  const [pendingReplayDecisionSessionId, setPendingReplayDecisionSessionId] = useState<string | null>(null);
   const [isFollowUpMode, setIsFollowUpMode] = useState(false);
   const [isHistoricalSession, setIsHistoricalSession] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [favoritePrompts, setFavoritePrompts] = useState<FavoritePrompt[]>([]);
   const [hasConfiguredModels, setHasConfiguredModels] = useState<boolean | null>(null); // null = loading, false = no models, true = has models
   const [isReplaying, setIsReplaying] = useState(false);
-  const [replayEnabled, setReplayEnabled] = useState(false);
   const [showAccuracyReport, setShowAccuracyReport] = useState(false);
   const [accuracyReport, setAccuracyReport] = useState<DomReplayAccuracyReportData | null>(null);
   const [accuracyError, setAccuracyError] = useState<string | null>(null);
@@ -47,6 +57,9 @@ const SidePanel = () => {
   const sessionIdRef = useRef<string | null>(null);
   const isReplayingRef = useRef<boolean>(false);
   const accuracyRequestSessionRef = useRef<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const recordedTaskSessionRef = useRef<string | null>(null);
+  const replayResultSessionRef = useRef<string | null>(null);
   const portRef = useRef<chrome.runtime.Port | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -79,37 +92,23 @@ const SidePanel = () => {
     }
   }, []);
 
-  // Load general settings to check if replay is enabled
-  const loadGeneralSettings = useCallback(async () => {
-    try {
-      const settings = await generalSettingsStore.getSettings();
-      setReplayEnabled(settings.replayHistoricalTasks);
-    } catch (error) {
-      console.error('Error loading general settings:', error);
-      setReplayEnabled(false);
-    }
-  }, []);
-
   // Check model configuration on mount
   useEffect(() => {
     checkModelConfiguration();
-    loadGeneralSettings();
-  }, [checkModelConfiguration, loadGeneralSettings]);
+  }, [checkModelConfiguration]);
 
   // Re-check model configuration when the side panel becomes visible again
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        // Panel became visible, re-check configuration and settings
+        // Panel became visible, re-check configuration
         checkModelConfiguration();
-        loadGeneralSettings();
       }
     };
 
     const handleFocus = () => {
-      // Panel gained focus, re-check configuration and settings
+      // Panel gained focus, re-check configuration
       checkModelConfiguration();
-      loadGeneralSettings();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -119,7 +118,7 @@ const SidePanel = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [checkModelConfiguration, loadGeneralSettings]);
+  }, [checkModelConfiguration]);
 
   useEffect(() => {
     sessionIdRef.current = currentSessionId;
@@ -128,6 +127,28 @@ const SidePanel = () => {
   useEffect(() => {
     isReplayingRef.current = isReplaying;
   }, [isReplaying]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
+  const waitForRecordedHistory = useCallback(async (sessionId: string, attempts = 10): Promise<boolean> => {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      const historyData = await chatHistoryStore.loadAgentStepHistory(sessionId);
+      if (historyData) {
+        return true;
+      }
+      await new Promise(resolve => window.setTimeout(resolve, 150));
+    }
+    return false;
+  }, []);
 
   const appendMessage = useCallback((newMessage: Message, sessionId?: string | null) => {
     // Don't save progress messages
@@ -166,8 +187,30 @@ const SidePanel = () => {
               setIsHistoricalSession(false);
               break;
             case ExecutionState.TASK_OK:
-              setIsFollowUpMode(true);
-              setInputEnabled(true);
+              const isReplayResultTask =
+                replayResultSessionRef.current !== null && data?.taskId === replayResultSessionRef.current;
+              if (replayResultSessionRef.current && data?.taskId === replayResultSessionRef.current) {
+                setIsFollowUpMode(false);
+                setIsHistoricalSession(true);
+                setInputEnabled(false);
+                replayResultSessionRef.current = null;
+              } else {
+                setIsFollowUpMode(true);
+              }
+              if (recordedTaskSessionRef.current && data?.taskId === recordedTaskSessionRef.current) {
+                const recordedTaskId = data.taskId;
+                setInputEnabled(false);
+                void (async () => {
+                  await waitForRecordedHistory(recordedTaskId);
+                  if (recordedTaskSessionRef.current !== recordedTaskId) {
+                    return;
+                  }
+                  setPendingReplayDecisionSessionId(recordedTaskId);
+                  recordedTaskSessionRef.current = null;
+                })();
+              } else if (!isReplayResultTask) {
+                setInputEnabled(true);
+              }
               setShowStopButton(false);
               setIsReplaying(false);
               break;
@@ -176,6 +219,17 @@ const SidePanel = () => {
               setInputEnabled(true);
               setShowStopButton(false);
               setIsReplaying(false);
+              if (replayResultSessionRef.current && data?.taskId === replayResultSessionRef.current) {
+                replayResultSessionRef.current = null;
+              }
+              if (recordedTaskSessionRef.current && data?.taskId === recordedTaskSessionRef.current) {
+                void (async () => {
+                  await waitForRecordedHistory(data.taskId);
+                  await chatHistoryStore.unmarkReplaySession(data.taskId);
+                  await chatHistoryStore.deleteAgentStepHistory(data.taskId);
+                })();
+                recordedTaskSessionRef.current = null;
+              }
               skip = false;
               break;
             case ExecutionState.TASK_CANCEL:
@@ -183,6 +237,17 @@ const SidePanel = () => {
               setInputEnabled(true);
               setShowStopButton(false);
               setIsReplaying(false);
+              if (replayResultSessionRef.current && data?.taskId === replayResultSessionRef.current) {
+                replayResultSessionRef.current = null;
+              }
+              if (recordedTaskSessionRef.current && data?.taskId === recordedTaskSessionRef.current) {
+                void (async () => {
+                  await waitForRecordedHistory(data.taskId);
+                  await chatHistoryStore.unmarkReplaySession(data.taskId);
+                  await chatHistoryStore.deleteAgentStepHistory(data.taskId);
+                })();
+                recordedTaskSessionRef.current = null;
+              }
               skip = false;
               break;
             case ExecutionState.TASK_PAUSE:
@@ -404,17 +469,6 @@ const SidePanel = () => {
   // Handle replay command
   const handleReplay = async (historySessionId: string): Promise<void> => {
     try {
-      // Check if replay is enabled in settings
-      if (!replayEnabled) {
-        appendMessage({
-          actor: Actors.SYSTEM,
-          content: t('chat_replay_disabled'),
-          timestamp: Date.now(),
-        });
-        return;
-      }
-
-      // Check if history exists using loadAgentStepHistory
       const historyData = await chatHistoryStore.loadAgentStepHistory(historySessionId);
       if (!historyData) {
         appendMessage({
@@ -425,64 +479,61 @@ const SidePanel = () => {
         return;
       }
 
-      // Get current tab ID
+      setShowReplayHistory(false);
+      setShowHistory(false);
+      setShowAccuracyReport(false);
+      setPendingReplayDecisionSessionId(null);
+      setMenuOpen(false);
+
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const tabId = tabs[0]?.id;
       if (!tabId) {
         throw new Error('No active tab found');
       }
 
-      // Clear messages if we're in a historical session
-      if (isHistoricalSession) {
-        setMessages([]);
-      }
+      setMessages([]);
 
-      // Create a new chat session for this replay task
-      const newSession = await chatHistoryStore.createSession(`Replay of ${historySessionId.substring(0, 20)}...`);
-      console.log('newSession for replay', newSession);
+      const replayTitle =
+        historyData.task.substring(0, 50) + (historyData.task.length > 50 ? '...' : '');
+      const newSession = await chatHistoryStore.createSession(replayTitle);
+      console.log('newSession for replay rerun', newSession);
 
-      // Store the new session ID in both state and ref
       const newTaskId = newSession.id;
       setCurrentSessionId(newTaskId);
       sessionIdRef.current = newTaskId;
+      replayResultSessionRef.current = newTaskId;
 
-      // Send replay command to background
       setInputEnabled(false);
       setShowStopButton(true);
-
-      // Reset follow-up mode and historical session flags
       setIsFollowUpMode(false);
       setIsHistoricalSession(false);
+      setIsReplaying(false);
 
       const userMessage = {
         actor: Actors.USER,
-        content: `/replay ${historySessionId}`,
+        content: historyData.task,
         timestamp: Date.now(),
       };
 
-      // Add the user message to the new session
       appendMessage(userMessage, sessionIdRef.current);
 
-      // Setup connection if not exists
       if (!portRef.current) {
         setupConnection();
       }
 
-      // Send replay command to background with the task from history
-      portRef.current?.postMessage({
-        type: 'replay',
+      await sendMessage({
+        type: 'new_task',
         taskId: newTaskId,
-        tabId: tabId,
-        historySessionId: historySessionId,
-        task: historyData.task, // Add the task from history
+        tabId,
+        task: historyData.task,
+        recordReplayHistory: false,
       });
 
       appendMessage({
         actor: Actors.SYSTEM,
-        content: t('chat_replay_starting', historyData.task),
+        content: `Re-running saved task:\n\n"${historyData.task}"`,
         timestamp: Date.now(),
       });
-      setIsReplaying(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       appendMessage({
@@ -581,11 +632,17 @@ const SidePanel = () => {
         throw new Error('No active tab found');
       }
 
+      const shouldRecordThisTask = isRecordArmed;
+      const hasActiveSession = sessionIdRef.current !== null;
+      const shouldSendAsFollowUp = isFollowUpMode && !shouldRecordThisTask && hasActiveSession;
+
       setInputEnabled(false);
       setShowStopButton(true);
+      setPendingReplayDecisionSessionId(null);
+      setMenuOpen(false);
 
-      // Create a new chat session for this task if not in follow-up mode
-      if (!isFollowUpMode) {
+      // Create a new chat session whenever there is no active session or we are not continuing a live one
+      if (!shouldSendAsFollowUp) {
         // Use display text for session title if available, otherwise use full text
         const titleText = displayText || text;
         const newSession = await chatHistoryStore.createSession(
@@ -608,19 +665,26 @@ const SidePanel = () => {
       // Pass the sessionId directly to appendMessage
       appendMessage(userMessage, sessionIdRef.current);
 
+      if (shouldRecordThisTask) {
+        recordedTaskSessionRef.current = sessionIdRef.current;
+      } else {
+        recordedTaskSessionRef.current = null;
+      }
+
       // Setup connection if not exists
       if (!portRef.current) {
         setupConnection();
       }
 
       // Send message using the utility function
-      if (isFollowUpMode) {
+      if (shouldSendAsFollowUp) {
         // Send as follow-up task
         await sendMessage({
           type: 'follow_up_task',
           task: text,
           taskId: sessionIdRef.current,
           tabId,
+          recordReplayHistory: false,
         });
         console.log('follow_up_task sent', text, tabId, sessionIdRef.current);
       } else {
@@ -630,6 +694,7 @@ const SidePanel = () => {
           task: text,
           taskId: sessionIdRef.current,
           tabId,
+          recordReplayHistory: shouldRecordThisTask,
         });
         console.log('new_task sent', text, tabId, sessionIdRef.current);
       }
@@ -674,6 +739,10 @@ const SidePanel = () => {
     setShowStopButton(false);
     setIsFollowUpMode(false);
     setIsHistoricalSession(false);
+    setPendingReplayDecisionSessionId(null);
+    recordedTaskSessionRef.current = null;
+    replayResultSessionRef.current = null;
+    setMenuOpen(false);
 
     // Disconnect any existing connection
     stopConnection();
@@ -682,20 +751,58 @@ const SidePanel = () => {
   const loadChatSessions = useCallback(async () => {
     try {
       const sessions = await chatHistoryStore.getSessionsMetadata();
-      setChatSessions(sessions.sort((a, b) => b.createdAt - a.createdAt));
+      setChatSessions(
+        sessions
+          .filter(session => !session.title.startsWith('Replay of '))
+          .sort((a, b) => b.createdAt - a.createdAt),
+      );
     } catch (error) {
       console.error('Failed to load chat sessions:', error);
+    }
+  }, []);
+
+  const loadReplaySessions = useCallback(async () => {
+    try {
+      const sessions = await chatHistoryStore.getSessionsMetadata();
+      const replaySessionIds = await chatHistoryStore.getReplaySessionIds();
+      const replayableSessions = await Promise.all(
+        sessions
+          .filter(session => replaySessionIds.includes(session.id))
+          .map(async session => {
+            const historyData = await chatHistoryStore.loadAgentStepHistory(session.id);
+            return historyData ? session : null;
+          }),
+      );
+
+      setReplaySessions(
+        replayableSessions
+          .filter((session): session is ChatSessionMetadata => session !== null)
+          .sort((a, b) => b.createdAt - a.createdAt),
+      );
+    } catch (error) {
+      console.error('Failed to load replay sessions:', error);
     }
   }, []);
 
   const handleLoadHistory = async () => {
     await loadChatSessions();
     setShowHistory(true);
+    setShowReplayHistory(false);
     setShowAccuracyReport(false);
+    setMenuOpen(false);
+  };
+
+  const handleLoadReplayHistory = async () => {
+    await loadReplaySessions();
+    setShowReplayHistory(true);
+    setShowHistory(false);
+    setShowAccuracyReport(false);
+    setMenuOpen(false);
   };
 
   const handleBackToChat = (reset = false) => {
     setShowHistory(false);
+    setShowReplayHistory(false);
     setShowAccuracyReport(false);
     if (reset) {
       setCurrentSessionId(null);
@@ -703,6 +810,7 @@ const SidePanel = () => {
       setIsFollowUpMode(false);
       setIsHistoricalSession(false);
     }
+    setMenuOpen(false);
   };
 
   const handleBackToHistoryFromAccuracy = () => {
@@ -711,7 +819,11 @@ const SidePanel = () => {
     setAccuracyError(null);
     setAccuracyLoadingSessionId(null);
     accuracyRequestSessionRef.current = null;
-    setShowHistory(true);
+    if (showReplayHistory) {
+      setShowReplayHistory(true);
+    } else {
+      setShowHistory(true);
+    }
   };
 
   const handleSessionSelect = async (sessionId: string) => {
@@ -733,7 +845,11 @@ const SidePanel = () => {
   const handleSessionDelete = async (sessionId: string) => {
     try {
       await chatHistoryStore.deleteSession(sessionId);
-      await loadChatSessions();
+      if (showReplayHistory) {
+        await loadReplaySessions();
+      } else {
+        await loadChatSessions();
+      }
       if (sessionId === currentSessionId) {
         setMessages([]);
         setCurrentSessionId(null);
@@ -772,7 +888,7 @@ const SidePanel = () => {
   };
 
   const handleSessionAccuracy = async (sessionId: string) => {
-    const sessionTitle = chatSessions.find(session => session.id === sessionId)?.title ?? `History ${sessionId}`;
+    const sessionTitle = [...chatSessions, ...replaySessions].find(session => session.id === sessionId)?.title ?? `History ${sessionId}`;
     setAccuracyReportTitle(sessionTitle);
     setAccuracyReport(null);
     setAccuracyError(null);
@@ -817,6 +933,31 @@ const SidePanel = () => {
     if (setInputTextRef.current) {
       setInputTextRef.current(content);
     }
+  };
+
+  const handleToggleRecord = () => {
+    setIsRecordArmed(prev => !prev);
+    setMenuOpen(false);
+  };
+
+  const handleSaveReplayDecision = async () => {
+    if (pendingReplayDecisionSessionId) {
+      await chatHistoryStore.markReplaySession(pendingReplayDecisionSessionId);
+    }
+    setPendingReplayDecisionSessionId(null);
+    recordedTaskSessionRef.current = null;
+    setInputEnabled(true);
+    await loadReplaySessions();
+  };
+
+  const handleDiscardReplayDecision = async () => {
+    if (!pendingReplayDecisionSessionId) return;
+    await chatHistoryStore.unmarkReplaySession(pendingReplayDecisionSessionId);
+    await chatHistoryStore.deleteAgentStepHistory(pendingReplayDecisionSessionId);
+    setPendingReplayDecisionSessionId(null);
+    recordedTaskSessionRef.current = null;
+    setInputEnabled(true);
+    await loadReplaySessions();
   };
 
   const handleBookmarkUpdateTitle = async (id: number, title: string) => {
@@ -890,11 +1031,11 @@ const SidePanel = () => {
         className={`flex h-screen flex-col ${isDarkMode ? 'bg-ebony' : 'bg-canvas'} overflow-hidden border ${isDarkMode ? 'border-ebony-muted' : 'border-warm-border'} rounded font-oracle`}>
         <header className="header relative">
           <div className="header-logo">
-            {showHistory || showAccuracyReport ? (
+            {showHistory || showReplayHistory || showAccuracyReport ? (
               <button
                 type="button"
                 onClick={() => (showAccuracyReport ? handleBackToHistoryFromAccuracy() : handleBackToChat(false))}
-                className="cursor-pointer text-[#C4BFBA] transition-colors hover:text-white"
+                className="cursor-pointer text-warm-gray transition-colors hover:text-white"
                 aria-label={t('nav_back_a11y')}>
                 {t('nav_back')}
               </button>
@@ -906,7 +1047,7 @@ const SidePanel = () => {
             )}
           </div>
           <div className="header-icons">
-            {!showHistory && !showAccuracyReport && (
+            {!showHistory && !showReplayHistory && !showAccuracyReport && (
               <>
                 <button
                   type="button"
@@ -917,15 +1058,54 @@ const SidePanel = () => {
                   tabIndex={0}>
                   <PiPlusBold size={20} />
                 </button>
-                <button
-                  type="button"
-                  onClick={handleLoadHistory}
-                  onKeyDown={e => e.key === 'Enter' && handleLoadHistory()}
-                  className={`header-icon ${isDarkMode ? 'text-warm-gray hover:text-oracle-red-light' : 'text-ebony hover:text-oracle-red'} cursor-pointer`}
-                  aria-label={t('nav_loadHistory_a11y')}
-                  tabIndex={0}>
-                  <GrHistory size={20} />
-                </button>
+                <div ref={menuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen(prev => !prev)}
+                    onKeyDown={e => e.key === 'Enter' && setMenuOpen(prev => !prev)}
+                    className={`header-icon ${isDarkMode ? 'text-warm-gray hover:text-oracle-red-light' : 'text-ebony hover:text-oracle-red'} cursor-pointer`}
+                    aria-label={t('nav_more_a11y')}
+                    tabIndex={0}>
+                    <div className="relative">
+                      <BsThreeDotsVertical size={18} />
+                      {isRecordArmed && <span className="absolute -right-1 -top-1 size-2 rounded-full bg-oracle-red" />}
+                    </div>
+                  </button>
+                  {menuOpen && (
+                    <div
+                      className={`absolute right-0 top-9 z-20 w-52 rounded-sm border p-1 shadow-lg ${
+                        isDarkMode ? 'border-ebony-muted bg-ebony-light' : 'border-warm-border bg-white'
+                      }`}>
+                      <button
+                        type="button"
+                        onClick={handleLoadHistory}
+                        className={`flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm transition-colors ${
+                          isDarkMode ? 'text-[#D4CFC9] hover:bg-ebony-muted' : 'text-ebony hover:bg-canvas'
+                        }`}>
+                        <span className="size-2 rounded-full bg-oracle-red" />
+                        <span>{t('chat_history_title')}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleToggleRecord}
+                        className={`flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm transition-colors ${
+                          isDarkMode ? 'text-[#D4CFC9] hover:bg-ebony-muted' : 'text-ebony hover:bg-canvas'
+                        }`}>
+                        <span className={`size-2 rounded-full ${isRecordArmed ? 'bg-oracle-red' : isDarkMode ? 'bg-warm-text' : 'bg-[#A09A94]'}`} />
+                        <span>Record</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleLoadReplayHistory}
+                        className={`flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm transition-colors ${
+                          isDarkMode ? 'text-[#D4CFC9] hover:bg-ebony-muted' : 'text-ebony hover:bg-canvas'
+                        }`}>
+                        <span className="size-2 rounded-full bg-oracle-red" />
+                        <span>{t('replay_history_title')}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
             <button
@@ -959,6 +1139,27 @@ const SidePanel = () => {
               onSessionBookmark={handleSessionBookmark}
               onSessionAccuracy={handleSessionAccuracy}
               accuracyLoadingSessionId={accuracyLoadingSessionId}
+              title={t('chat_history_title')}
+              emptyMessage={t('chat_history_empty')}
+              showBookmark={true}
+              showAccuracy={false}
+              visible={true}
+              isDarkMode={isDarkMode}
+            />
+          </div>
+        ) : showReplayHistory ? (
+          <div className="flex-1 overflow-hidden">
+            <ChatHistoryList
+              sessions={replaySessions}
+              onSessionSelect={handleReplay}
+              onSessionDelete={handleSessionDelete}
+              onSessionBookmark={handleSessionBookmark}
+              onSessionAccuracy={handleSessionAccuracy}
+              accuracyLoadingSessionId={accuracyLoadingSessionId}
+              title={t('replay_history_title')}
+              emptyMessage={t('replay_history_empty')}
+              showBookmark={false}
+              showAccuracy={true}
               visible={true}
               isDarkMode={isDarkMode}
             />
@@ -988,7 +1189,7 @@ const SidePanel = () => {
                   <p className="mb-4">{t('welcome_instruction')}</p>
                   <button
                     onClick={() => chrome.runtime.openOptionsPage()}
-                    className="my-4 rounded-sm bg-[#C74634] px-4 py-2 font-medium text-white transition-colors hover:bg-[#9E3929]">
+                    className="my-4 rounded-sm bg-oracle-red px-4 py-2 font-medium text-white transition-colors hover:bg-oracle-red-dark">
                     {t('welcome_openSettings')}
                   </button>
                 </div>
@@ -1001,7 +1202,7 @@ const SidePanel = () => {
                 {messages.length === 0 && (
                   <>
                     {/* Blank canvas empty state — centered ghost logo */}
-                    <div className={`flex flex-1 flex-col items-center justify-center oracle-chat-bg`}>
+                    <div className={`oracle-chat-bg flex flex-1 flex-col items-center justify-center`}>
                       <img
                         src="./oracle-logo.svg"
                         alt="Oracle AXIS"
@@ -1010,7 +1211,7 @@ const SidePanel = () => {
                       />
                     </div>
                     <div
-                      className={`border-t ${isDarkMode ? 'border-[#4A4644]' : 'border-[#E0DDD5]'} p-2`}>
+                      className={`border-t ${isDarkMode ? 'border-ebony-muted' : 'border-warm-border'} p-2`}>
                       <ChatInput
                         onSendMessage={handleSendMessage}
                         onStopTask={handleStopTask}
@@ -1020,16 +1221,22 @@ const SidePanel = () => {
                           setInputTextRef.current = setter;
                         }}
                         isDarkMode={isDarkMode}
-                        historicalSessionId={isHistoricalSession && replayEnabled ? currentSessionId : null}
-                        onReplay={handleReplay}
                       />
                     </div>
                   </>
                 )}
                 {messages.length > 0 && (
                   <div
-                    className={`scrollbar-gutter-stable flex-1 overflow-x-hidden overflow-y-scroll scroll-smooth p-3 oracle-chat-bg`}>
-                    <MessageList messages={messages} isDarkMode={isDarkMode} />
+                    className={`scrollbar-gutter-stable oracle-chat-bg flex-1 overflow-x-hidden overflow-y-scroll scroll-smooth p-3`}>
+                    <MessageList
+                      messages={messages}
+                      isDarkMode={isDarkMode}
+                      showReplayDecision={
+                        pendingReplayDecisionSessionId !== null && pendingReplayDecisionSessionId === currentSessionId
+                      }
+                      onSaveReplayDecision={handleSaveReplayDecision}
+                      onDiscardReplayDecision={handleDiscardReplayDecision}
+                    />
                     <div ref={messagesEndRef} />
                   </div>
                 )}
@@ -1045,8 +1252,6 @@ const SidePanel = () => {
                         setInputTextRef.current = setter;
                       }}
                       isDarkMode={isDarkMode}
-                      historicalSessionId={isHistoricalSession && replayEnabled ? currentSessionId : null}
-                      onReplay={handleReplay}
                     />
                   </div>
                 )}

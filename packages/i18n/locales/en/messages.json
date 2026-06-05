@@ -28,6 +28,21 @@
   "nav_loadHistory_a11y": {
     "message": "Load History"
   },
+  "nav_loadReplayHistory_a11y": {
+    "message": "Load Replay History"
+  },
+  "nav_more_a11y": {
+    "message": "Open history and recording menu"
+  },
+  "nav_record": {
+    "message": "Record"
+  },
+  "nav_record_next": {
+    "message": "Record next task"
+  },
+  "nav_record_armed": {
+    "message": "Recording armed"
+  },
   "nav_settings_a11y": {
     "message": "Settings"
   },
@@ -79,11 +94,26 @@
   "chat_history_empty": {
     "message": "No chat history available"
   },
+  "replay_history_title": {
+    "message": "Replay History"
+  },
+  "replay_history_empty": {
+    "message": "No replayable tasks available"
+  },
   "chat_history_bookmark": {
     "message": "Bookmark session"
   },
   "chat_history_delete": {
     "message": "Delete session"
+  },
+  "chat_recording_prompt": {
+    "message": "Save this run to Replay History?"
+  },
+  "chat_recording_save": {
+    "message": "Save"
+  },
+  "chat_recording_delete": {
+    "message": "Delete"
   },
   "chat_bookmarks_header": {
     "message": "Quick Start"

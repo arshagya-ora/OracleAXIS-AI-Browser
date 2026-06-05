@@ -82,7 +82,7 @@ const BookmarkList: React.FC<BookmarkListProps> = ({
 
   return (
     <div className="p-3">
-      <h3 className={`mb-3 text-xs font-semibold uppercase tracking-widest ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>
+      <h3 className={`mb-3 text-xs font-semibold uppercase tracking-widest ${isDarkMode ? 'text-warm-text' : 'text-[#A09A94]'}`}>
         {t('chat_bookmarks_header')}
       </h3>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -96,8 +96,8 @@ const BookmarkList: React.FC<BookmarkListProps> = ({
             onDrop={e => handleDrop(e, bookmark.id)}
             className={`group relative rounded border p-3 transition-colors ${
               isDarkMode
-                ? 'border-[#4A4644] bg-[#3A3836] hover:border-[#C74634]'
-                : 'border-[#E0DDD5] bg-white hover:border-[#C74634]'
+                ? 'border-ebony-muted bg-ebony-light hover:border-oracle-red'
+                : 'border-warm-border bg-white hover:border-oracle-red'
             }`}>
             {editingId === bookmark.id ? (
               <div className="flex items-center gap-1">
@@ -106,18 +106,18 @@ const BookmarkList: React.FC<BookmarkListProps> = ({
                   type="text"
                   value={editTitle}
                   onChange={e => setEditTitle(e.target.value)}
-                  className={`mr-1 grow rounded border px-2 py-1 text-sm focus:outline-none focus:border-[#C74634] ${
+                  className={`mr-1 grow rounded border px-2 py-1 text-sm focus:border-oracle-red focus:outline-none ${
                     isDarkMode
-                      ? 'border-[#4A4644] bg-[#2D2B29] text-[#D4CFC9]'
-                      : 'border-[#E0DDD5] bg-[#F8F7F3] text-[#2D2B29]'
+                      ? 'border-ebony-muted bg-ebony text-[#D4CFC9]'
+                      : 'border-warm-border bg-canvas text-ebony'
                   }`}
                 />
                 <button
                   onClick={() => handleSaveEdit(bookmark.id)}
                   className={`rounded p-1 transition-colors ${
                     isDarkMode
-                      ? 'text-[#C74634] hover:bg-[#4A4644]'
-                      : 'text-[#C74634] hover:bg-[#F8F7F3]'
+                      ? 'text-oracle-red hover:bg-ebony-muted'
+                      : 'text-oracle-red hover:bg-canvas'
                   }`}
                   aria-label={t('chat_bookmarks_saveEdit')}
                   type="button">
@@ -127,8 +127,8 @@ const BookmarkList: React.FC<BookmarkListProps> = ({
                   onClick={handleCancelEdit}
                   className={`rounded p-1 transition-colors ${
                     isDarkMode
-                      ? 'text-[#6B6460] hover:bg-[#4A4644]'
-                      : 'text-[#A09A94] hover:bg-[#F8F7F3]'
+                      ? 'text-warm-text hover:bg-ebony-muted'
+                      : 'text-[#A09A94] hover:bg-canvas'
                   }`}
                   aria-label={t('chat_bookmarks_cancelEdit')}
                   type="button">
@@ -147,7 +147,7 @@ const BookmarkList: React.FC<BookmarkListProps> = ({
                   }}
                   className="w-full text-left">
                   <div
-                    className={`truncate pr-10 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                    className={`truncate pr-10 text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-ebony'}`}>
                     {bookmark.title}
                   </div>
                 </button>
@@ -164,8 +164,8 @@ const BookmarkList: React.FC<BookmarkListProps> = ({
                   }}
                   className={`absolute right-7 top-1/2 z-10 -translate-y-1/2 rounded p-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100 ${
                     isDarkMode
-                      ? 'text-[#C74634] hover:bg-[#4A4644]'
-                      : 'text-[#C74634] hover:bg-[#F8F7F3]'
+                      ? 'text-oracle-red hover:bg-ebony-muted'
+                      : 'text-oracle-red hover:bg-canvas'
                   }`}
                   aria-label={t('chat_bookmarks_edit')}
                   type="button">
@@ -182,8 +182,8 @@ const BookmarkList: React.FC<BookmarkListProps> = ({
                   }}
                   className={`absolute right-1 top-1/2 z-10 -translate-y-1/2 rounded p-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100 ${
                     isDarkMode
-                      ? 'text-[#6B6460] hover:bg-[#4A4644] hover:text-[#C4BFBA]'
-                      : 'text-[#A09A94] hover:bg-[#F8F7F3] hover:text-[#2D2B29]'
+                      ? 'text-warm-text hover:bg-ebony-muted hover:text-warm-gray'
+                      : 'text-[#A09A94] hover:bg-canvas hover:text-ebony'
                   }`}
                   aria-label={t('chat_bookmarks_delete')}
                   type="button">

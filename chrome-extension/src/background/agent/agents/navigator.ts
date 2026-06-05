@@ -23,7 +23,7 @@ import {
   RequestCancelledError,
 } from './errors';
 import { calcBranchPathHashSet } from '@src/background/browser/dom/views';
-import { type BrowserState, BrowserStateHistory, URLNotAllowedError } from '@src/background/browser/views';
+import { type BrowserState, BrowserStateHistory, type TabInfo, URLNotAllowedError } from '@src/background/browser/views';
 import { convertZodToJsonSchema, repairJsonString } from '@src/background/utils';
 import { HistoryTreeProcessor } from '@src/background/browser/dom/history/service';
 import { AgentStepRecord } from '../history';
@@ -36,6 +36,38 @@ interface ParsedModelOutput {
     next_goal?: string;
   };
   action?: (Record<string, unknown> | null)[] | null;
+}
+
+function normalizeActionEntries(
+  actionEntries: (Record<string, unknown> | null)[] | null | undefined,
+): (Record<string, unknown> | null)[] {
+  if (!Array.isArray(actionEntries)) {
+    return [];
+  }
+
+  return actionEntries
+    .map(entry => {
+      if (!entry || typeof entry !== 'object') {
+        return null;
+      }
+
+      const nonNullEntries = Object.entries(entry).filter(([, value]) => value !== null && value !== undefined);
+      if (nonNullEntries.length === 0) {
+        return null;
+      }
+
+      const [actionName, actionArgs] = nonNullEntries[0];
+      return { [actionName]: actionArgs };
+    })
+    .filter((entry): entry is Record<string, unknown> | null => entry !== undefined);
+}
+
+function getUrlOrigin(url: string): string | null {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
 }
 
 export class NavigatorActionRegistry {
@@ -335,8 +367,7 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
   private fixActions(response: this['ModelOutput']): Record<string, unknown>[] {
     let actions: Record<string, unknown>[] = [];
     if (Array.isArray(response.action)) {
-      // if the item is null, skip it
-      actions = response.action.filter((item: unknown) => item !== null);
+      actions = normalizeActionEntries(response.action).filter((item): item is Record<string, unknown> => item !== null);
       if (actions.length === 0) {
         logger.warning('No valid actions found', response.action);
       }
@@ -480,7 +511,8 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
     // logger.info('Parsed output', JSON.stringify(parsedOutput, null, 2));
 
     const goal = parsedOutput?.current_state?.next_goal || '';
-    const actionsToReplay = parsedOutput?.action;
+    const actionsToReplay = normalizeActionEntries(parsedOutput?.action);
+    parsedOutput.action = actionsToReplay;
 
     // Validate that there are actions to replay
     if (
@@ -503,49 +535,111 @@ export class NavigatorAgent extends BaseAgent<z.ZodType, NavigatorResult> {
     historyItem: AgentStepRecord,
     delay: number,
   ): Promise<ActionResult[]> {
-    const state = await this.context.browserContext.getState(this.context.options.useVision);
-    if (!state) {
-      throw new Error('Invalid browser state');
-    }
-
-    const updatedActions: (Record<string, unknown> | null)[] = [];
+    const replayResults: ActionResult[] = [];
     for (let i = 0; i < parsedOutput.action!.length; i++) {
       const result = historyItem.result[i];
-      if (!result) {
-        break;
-      }
-      const interactedElement = result.interactedElement;
       const currentAction = parsedOutput.action![i];
 
       // Skip null actions
       if (currentAction === null) {
-        updatedActions.push(null);
+        continue;
+      }
+
+      const actionName = Object.keys(currentAction)[0];
+
+      // "done" is a model conclusion, not a browser action to replay.
+      if (actionName === 'done') {
+        continue;
+      }
+
+      let actionToExecute = currentAction;
+      const interactedElement = result?.interactedElement ?? null;
+
+      if (actionName === 'switch_tab') {
+        const currentState = await this.context.browserContext.getState(this.context.options.useVision);
+        const remappedAction = this.remapTabAction(historyItem.state.tabs, currentState.tabs, currentAction);
+        if (remappedAction) {
+          actionToExecute = remappedAction;
+        }
+        const actionResults = await this.doMultiAction([actionToExecute]);
+        replayResults.push(...actionResults);
+        await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
 
       // If there's no interacted element, just use the action as is
       if (!interactedElement) {
-        updatedActions.push(currentAction);
+        const actionResults = await this.doMultiAction([actionToExecute]);
+        replayResults.push(...actionResults);
+        await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
 
-      const updatedAction = await this.updateActionIndices(interactedElement, currentAction, state);
-      updatedActions.push(updatedAction);
+      const currentState = await this.context.browserContext.getState(this.context.options.useVision);
+      if (!currentState) {
+        throw new Error('Invalid browser state');
+      }
+
+      const updatedAction = await this.updateActionIndices(interactedElement, currentAction, currentState);
 
       if (updatedAction === null) {
-        throw new Error(`Could not find matching element ${i} in current page`);
+        logger.warning(`Could not remap replay action ${i}; falling back to original action index`);
+      } else {
+        actionToExecute = updatedAction;
+        logger.debug('updated replay action', actionToExecute);
       }
+
+      const actionResults = await this.doMultiAction([actionToExecute]);
+      replayResults.push(...actionResults);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
 
-    logger.debug('updatedActions', updatedActions);
+    return replayResults;
+  }
 
-    // Filter out null values and cast to the expected type
-    const validActions = updatedActions.filter((action): action is Record<string, unknown> => action !== null);
-    const result = await this.doMultiAction(validActions);
+  private remapTabAction(
+    historicalTabs: TabInfo[],
+    currentTabs: TabInfo[],
+    action: Record<string, unknown>,
+  ): Record<string, unknown> | null {
+    const actionName = Object.keys(action)[0];
+    if (actionName !== 'switch_tab') {
+      return action;
+    }
 
-    // Wait for the specified delay
-    await new Promise(resolve => setTimeout(resolve, delay));
-    return result;
+    const actionArgs = action[actionName];
+    if (!actionArgs || typeof actionArgs !== 'object' || !('tab_id' in actionArgs)) {
+      return action;
+    }
+
+    const historicalTabId = (actionArgs as { tab_id: number }).tab_id;
+    const historicalTab = historicalTabs.find(tab => tab.id === historicalTabId);
+    if (!historicalTab) {
+      return action;
+    }
+
+    const historicalOrigin = getUrlOrigin(historicalTab.url);
+    const matchingTab =
+      currentTabs.find(tab => tab.url === historicalTab.url && tab.title === historicalTab.title) ??
+      currentTabs.find(tab => tab.url === historicalTab.url) ??
+      currentTabs.find(tab => tab.title === historicalTab.title) ??
+      currentTabs.find(tab => historicalOrigin !== null && getUrlOrigin(tab.url) === historicalOrigin);
+
+    if (!matchingTab) {
+      return {
+        open_tab: {
+          url: historicalTab.url,
+          intent: `Open recorded tab for replay: ${historicalTab.title || historicalTab.url}`,
+        },
+      };
+    }
+
+    return {
+      [actionName]: {
+        ...actionArgs,
+        tab_id: matchingTab.id,
+      },
+    };
   }
 
   async executeHistoryStep(

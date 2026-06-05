@@ -8,9 +8,6 @@ interface ChatInputProps {
   showStopButton: boolean;
   setContent?: (setter: (text: string) => void) => void;
   isDarkMode?: boolean;
-  // Historical session ID - if provided, shows replay button instead of send button
-  historicalSessionId?: string | null;
-  onReplay?: (sessionId: string) => void;
 }
 
 // File attachment interface
@@ -27,8 +24,6 @@ export default function ChatInput({
   showStopButton,
   setContent,
   isDarkMode = false,
-  historicalSessionId,
-  onReplay,
 }: ChatInputProps) {
   const [text, setText] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
@@ -115,12 +110,6 @@ export default function ChatInput({
     [handleSubmit],
   );
 
-  const handleReplay = useCallback(() => {
-    if (historicalSessionId && onReplay) {
-      onReplay(historicalSessionId);
-    }
-  }, [historicalSessionId, onReplay]);
-
   const handleFileSelect = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -179,22 +168,22 @@ export default function ChatInput({
       onSubmit={handleSubmit}
       className={`command-input-container overflow-hidden rounded-sm border shadow-sm transition-colors ${
         disabled
-          ? isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-[#F8F7F3]'
-          : 'focus-within:border-[#C74634] focus-within:shadow-[0_0_0_2px_rgba(199,70,52,0.12)]'
-      } ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-white'}`}
+          ? isDarkMode ? 'border-ebony-muted bg-ebony-light' : 'border-warm-border bg-canvas'
+          : 'focus-within:border-oracle-red focus-within:shadow-[0_0_0_2px_rgba(199,70,52,0.12)]'
+      } ${isDarkMode ? 'border-ebony-muted bg-ebony-light' : 'border-warm-border bg-white'}`}
       aria-label={t('chat_input_form')}>
       <div className="flex flex-col">
         {/* File attachments display */}
         {attachedFiles.length > 0 && (
           <div
             className={`flex flex-wrap gap-2 border-b p-2 ${
-              isDarkMode ? 'border-[#4A4644] bg-[#2D2B29]' : 'border-[#E0DDD5] bg-[#F8F7F3]'
+              isDarkMode ? 'border-ebony-muted bg-ebony' : 'border-warm-border bg-canvas'
             }`}>
             {attachedFiles.map((file, index) => (
               <div
                 key={index}
                 className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${
-                  isDarkMode ? 'bg-[#4A4644] text-[#C4BFBA]' : 'bg-[#E0DDD5] text-[#2D2B29]'
+                  isDarkMode ? 'bg-ebony-muted text-warm-gray' : 'bg-warm-border text-ebony'
                 }`}>
                 <svg className="size-3 shrink-0 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                   <path d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
@@ -204,7 +193,7 @@ export default function ChatInput({
                   type="button"
                   onClick={() => handleRemoveFile(index)}
                   className={`ml-1 rounded-sm transition-colors ${
-                    isDarkMode ? 'hover:bg-[#2D2B29]' : 'hover:bg-[#C4BFBA]'
+                    isDarkMode ? 'hover:bg-ebony' : 'hover:bg-warm-gray'
                   }`}
                   aria-label={`Remove ${file.name}`}>
                   <span className="text-xs">✕</span>
@@ -226,11 +215,11 @@ export default function ChatInput({
           className={`w-full resize-none border-none p-2.5 font-mono text-sm focus:outline-none ${
             disabled
               ? isDarkMode
-                ? 'cursor-not-allowed bg-[#3A3836] text-[#6B6460]'
+                ? 'cursor-not-allowed bg-ebony-light text-warm-text'
                 : 'cursor-not-allowed bg-[#F0EDE8] text-[#A09A94]'
               : isDarkMode
-                ? 'bg-[#3A3836] text-[#D4CFC9] placeholder:text-[#6B6460]'
-                : 'bg-white text-[#2D2B29] placeholder:text-[#A09A94]'
+                ? 'bg-ebony-light text-[#D4CFC9] placeholder:text-warm-text'
+                : 'bg-white text-ebony placeholder:text-[#A09A94]'
           }`}
           placeholder={attachedFiles.length > 0 ? 'Add a message (optional)...' : 'Type /help to see automation capabilities...\nReady for input...'}
           aria-label={t('chat_input_editor')}
@@ -239,10 +228,10 @@ export default function ChatInput({
         <div
           className={`flex items-center justify-between px-2 py-1.5 ${
             disabled
-              ? isDarkMode ? 'bg-[#3A3836]' : 'bg-[#F0EDE8]'
-              : isDarkMode ? 'bg-[#3A3836]' : 'bg-white'
+              ? isDarkMode ? 'bg-ebony-light' : 'bg-[#F0EDE8]'
+              : isDarkMode ? 'bg-ebony-light' : 'bg-white'
           }`}>
-          <div className={`flex gap-1 ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>
+          <div className={`flex gap-1 ${isDarkMode ? 'text-warm-text' : 'text-[#A09A94]'}`}>
             {/* File attachment button */}
             <button
               type="button"
@@ -254,8 +243,8 @@ export default function ChatInput({
                 disabled
                   ? 'cursor-not-allowed opacity-40'
                   : isDarkMode
-                    ? 'hover:bg-[#4A4644] hover:text-[#C4BFBA]'
-                    : 'hover:bg-[#F8F7F3] hover:text-[#2D2B29]'
+                    ? 'hover:bg-ebony-muted hover:text-warm-gray'
+                    : 'hover:bg-canvas hover:text-ebony'
               }`}>
               <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                 <path d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
@@ -272,8 +261,6 @@ export default function ChatInput({
               className="hidden"
               aria-hidden="true"
             />
-
-
           </div>
 
           {showStopButton ? (
@@ -283,15 +270,6 @@ export default function ChatInput({
               className="rounded border border-red-400 px-3 py-1 text-sm text-red-500 transition-colors hover:bg-red-500 hover:text-white">
               {t('chat_buttons_stop')}
             </button>
-          ) : historicalSessionId ? (
-            <button
-              type="button"
-              onClick={handleReplay}
-              disabled={!historicalSessionId}
-              aria-disabled={!historicalSessionId}
-              className={`rounded border border-[#C74634] px-3 py-1 text-sm text-[#C74634] transition-colors hover:enabled:bg-[#C74634] hover:enabled:text-white ${!historicalSessionId ? 'cursor-not-allowed opacity-40' : ''}`}>
-              {t('chat_buttons_replay')}
-            </button>
           ) : (
             <button
               type="submit"
@@ -299,8 +277,8 @@ export default function ChatInput({
               aria-disabled={isSendButtonDisabled}
               className={`execute-button flex items-center justify-center rounded-sm border px-3 py-1 text-sm font-medium transition-all duration-200 ${
                 isSendButtonDisabled
-                  ? 'cursor-not-allowed border-transparent text-[#C4BFBA] saturate-0'
-                  : 'border-[#C74634] text-[#C74634] hover:bg-[#C74634] hover:text-white'
+                  ? 'cursor-not-allowed border-transparent text-warm-gray saturate-0'
+                  : 'border-oracle-red text-oracle-red hover:bg-oracle-red hover:text-white'
               }`}>
               <span className="execute-glyph font-mono tracking-tighter">[{'>'}]</span>
             </button>

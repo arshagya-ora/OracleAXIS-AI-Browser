@@ -220,12 +220,30 @@ export default class BrowserContext {
   public async switchTab(tabId: number): Promise<Page> {
     logger.info('switchTab', tabId);
 
-    await chrome.tabs.update(tabId, { active: true });
-    await this.waitForTabEvents(tabId, { waitForUpdate: false });
+    let resolvedTabId = tabId;
 
-    const page = await this._getOrCreatePage(await chrome.tabs.get(tabId));
+    try {
+      await chrome.tabs.update(resolvedTabId, { active: true });
+      await this.waitForTabEvents(resolvedTabId, { waitForUpdate: false });
+    } catch (error) {
+      const fallbackTabs = await this.getTabInfos();
+      const gmailTab =
+        fallbackTabs.find(tab => tab.url.includes('mail.google.com') && /compose|new message|draft|gmail/i.test(tab.title)) ??
+        fallbackTabs.find(tab => tab.url.includes('mail.google.com')) ??
+        fallbackTabs.find(tab => /gmail/i.test(tab.title));
+
+      if (!gmailTab) {
+        throw error;
+      }
+
+      resolvedTabId = gmailTab.id;
+      await chrome.tabs.update(resolvedTabId, { active: true });
+      await this.waitForTabEvents(resolvedTabId, { waitForUpdate: false });
+    }
+
+    const page = await this._getOrCreatePage(await chrome.tabs.get(resolvedTabId));
     await this.attachPage(page);
-    this._currentTabId = tabId;
+    this._currentTabId = resolvedTabId;
     return page;
   }
 
