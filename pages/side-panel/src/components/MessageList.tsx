@@ -5,9 +5,22 @@ import { memo } from 'react';
 interface MessageListProps {
   messages: Message[];
   isDarkMode?: boolean;
+  showReplayDecision?: boolean;
+  onSaveReplayDecision?: () => void;
+  onDiscardReplayDecision?: () => void;
 }
 
-export default memo(function MessageList({ messages, isDarkMode = false }: MessageListProps) {
+export default memo(function MessageList({
+  messages,
+  isDarkMode = false,
+  showReplayDecision = false,
+  onSaveReplayDecision,
+  onDiscardReplayDecision,
+}: MessageListProps) {
+  const lastReplyIndex = [...messages].map((message, index) => ({ message, index }))
+    .reverse()
+    .find(({ message }) => message.actor !== 'user' && message.content !== 'Showing progress...')?.index ?? -1;
+
   return (
     <div className="max-w-full space-y-4">
       {messages.map((message, index) => (
@@ -16,6 +29,9 @@ export default memo(function MessageList({ messages, isDarkMode = false }: Messa
           message={message}
           isSameActor={index > 0 ? messages[index - 1].actor === message.actor : false}
           isDarkMode={isDarkMode}
+          showReplayDecision={showReplayDecision && index === lastReplyIndex}
+          onSaveReplayDecision={onSaveReplayDecision}
+          onDiscardReplayDecision={onDiscardReplayDecision}
         />
       ))}
     </div>
@@ -26,9 +42,19 @@ interface MessageBlockProps {
   message: Message;
   isSameActor: boolean;
   isDarkMode?: boolean;
+  showReplayDecision?: boolean;
+  onSaveReplayDecision?: () => void;
+  onDiscardReplayDecision?: () => void;
 }
 
-function MessageBlock({ message, isSameActor, isDarkMode = false }: MessageBlockProps) {
+function MessageBlock({
+  message,
+  isSameActor,
+  isDarkMode = false,
+  showReplayDecision = false,
+  onSaveReplayDecision,
+  onDiscardReplayDecision,
+}: MessageBlockProps) {
   if (!message.actor) {
     console.error('No actor found');
     return <div />;
@@ -44,11 +70,11 @@ function MessageBlock({ message, isSameActor, isDarkMode = false }: MessageBlock
 
   if (isProgress) {
     return (
-      <div className={`mt-2 flex w-full justify-end animate-slide-up`}>
-        <div className={`w-11/12 max-w-3xl rounded-sm p-2 text-xs font-mono shadow-sm animate-glow-pulse ${isDarkMode ? 'bg-[#2D2B29] text-[#A09A94] border border-[#4A4644]' : 'bg-[#F8F7F3] text-[#6B6460] border border-[#E0DDD5]'}`}>
+      <div className={`animate-slide-up mt-2 flex w-full justify-end`}>
+        <div className={`animate-glow-pulse w-11/12 max-w-3xl rounded-sm p-2 font-mono text-xs shadow-sm ${isDarkMode ? 'border border-ebony-muted bg-ebony text-[#A09A94]' : 'border border-warm-border bg-canvas text-warm-text'}`}>
           <details open className="cursor-pointer">
             <summary className="flex items-center gap-2 outline-none">
-              <svg className="size-3 animate-faint-rotate opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg className="animate-faint-rotate size-3 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
               </svg>
               <span>[Trace Log] Generating response...</span>
@@ -64,7 +90,7 @@ function MessageBlock({ message, isSameActor, isDarkMode = false }: MessageBlock
   }
 
   return (
-    <div className={`flex max-w-full gap-2 animate-slide-up ${isUser ? 'flex-row-reverse justify-start' : 'justify-start'}`}>
+    <div className={`animate-slide-up flex max-w-full gap-2 ${isUser ? 'flex-row-reverse justify-start' : 'justify-start'}`}>
       {/* AI side icon */}
       {!isSameActor && !isUser && (
         <div className="flex size-6 shrink-0 items-center justify-center pt-1 opacity-60">
@@ -78,21 +104,40 @@ function MessageBlock({ message, isSameActor, isDarkMode = false }: MessageBlock
       <div className="flex max-w-[75%] flex-col">
         {/* Actor label ABOVE the block */}
         {!isSameActor && !isUser && (
-          <div className="mb-0.5 text-[10px] font-semibold tracking-widest uppercase text-[#8B2C20] opacity-80">
+          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#8B2C20] opacity-80">
             {actor.name}
           </div>
         )}
 
-        <div className={`rounded-sm py-2 px-3 shadow-sm ${blockClass}`}>
+        <div className={`rounded-sm px-3 py-2 shadow-sm ${blockClass}`}>
           <div className="whitespace-pre-wrap break-words text-sm leading-snug">
             {message.content}
           </div>
-          <div className={`text-right text-[9px] mt-1 ${isUser
-            ? isDarkMode ? 'text-[#6B6460]' : 'text-[#908E89]'
+          <div className={`mt-1 text-right text-[9px] ${isUser
+            ? isDarkMode ? 'text-warm-text' : 'text-[#908E89]'
             : 'text-white/40'
           }`}>
             {formatTimestamp(message.timestamp)}
           </div>
+          {showReplayDecision && (
+            <div className="mt-3 border-t border-white/15 pt-3">
+              <div className="mb-2 text-xs text-white/80">Save this run to Replay History?</div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={onSaveReplayDecision}
+                  className="rounded-sm border border-white/40 px-3 py-1 text-xs text-white transition-colors hover:bg-white hover:text-[#8B2C20]">
+                  Save It
+                </button>
+                <button
+                  type="button"
+                  onClick={onDiscardReplayDecision}
+                  className="rounded-sm border border-white/20 px-3 py-1 text-xs text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+                  Delete It
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

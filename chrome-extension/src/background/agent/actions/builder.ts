@@ -303,8 +303,28 @@ export class ActionBuilder {
     const switchTab = new Action(async (input: z.infer<typeof switchTabActionSchema.schema>) => {
       const intent = input.intent || t('act_switchTab_start', [input.tab_id.toString()]);
       this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_START, intent);
-      await this.context.browserContext.switchTab(input.tab_id);
-      const msg = t('act_switchTab_ok', [input.tab_id.toString()]);
+      let targetTabId = input.tab_id;
+
+      try {
+        await this.context.browserContext.switchTab(targetTabId);
+      } catch (error) {
+        const normalizedIntent = intent.toLowerCase();
+        const tabInfos = await this.context.browserContext.getTabInfos();
+
+        const gmailTab =
+          tabInfos.find(tab => tab.url.includes('mail.google.com') && /compose|new message|draft|gmail/i.test(tab.title)) ??
+          tabInfos.find(tab => tab.url.includes('mail.google.com')) ??
+          tabInfos.find(tab => /gmail/i.test(tab.title));
+
+        if ((normalizedIntent.includes('gmail') || normalizedIntent.includes('mail')) && gmailTab) {
+          targetTabId = gmailTab.id;
+          await this.context.browserContext.switchTab(targetTabId);
+        } else {
+          throw error;
+        }
+      }
+
+      const msg = t('act_switchTab_ok', [targetTabId.toString()]);
       this.context.emitEvent(Actors.NAVIGATOR, ExecutionState.ACT_OK, msg);
       return new ActionResult({ extractedContent: msg, includeInMemory: true });
     }, switchTabActionSchema);

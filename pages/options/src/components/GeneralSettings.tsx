@@ -32,20 +32,20 @@ export const GeneralSettings = ({ isDarkMode = false }: GeneralSettingsProps) =>
 
   const rowLabel = (title: string, desc: string) => (
     <div>
-      <h3 className={`text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>{title}</h3>
-      <p className={`text-xs font-normal ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>{desc}</p>
+      <h3 className={`text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-ebony'}`}>{title}</h3>
+      <p className={`text-xs font-normal ${isDarkMode ? 'text-warm-text' : 'text-[#A09A94]'}`}>{desc}</p>
     </div>
   );
 
   return (
     <section className="space-y-6">
       <div
-        className={`rounded border ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-white'} p-6 text-left shadow-sm`}>
-        <h2 className={`mb-5 text-left text-xl font-semibold ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+        className={`rounded border ${isDarkMode ? 'border-ebony-muted bg-ebony-light' : 'border-warm-border bg-white'} p-6 text-left shadow-sm`}>
+        <h2 className={`mb-5 text-left text-xl font-semibold ${isDarkMode ? 'text-[#D4CFC9]' : 'text-ebony'}`}>
           {t('options_general_header')}
         </h2>
 
-        <div className="divide-y divide-[#E0DDD5]">
+        <div className="divide-y divide-warm-border">
           {isDarkMode && <style>{`.divide-y > * + * { border-color: #4A4644; }`}</style>}
 
           <div className="flex items-center justify-between py-4">
@@ -92,17 +92,6 @@ export const GeneralSettings = ({ isDarkMode = false }: GeneralSettingsProps) =>
             <input id="minWaitPageLoad" type="number" min={250} max={5000} step={50} value={settings.minWaitPageLoad}
               onChange={e => updateSetting('minWaitPageLoad', Number.parseInt(e.target.value, 10))}
               className={inputCls(isDarkMode)} />
-          </div>
-
-          <div className="flex items-center justify-between py-4">
-            {rowLabel(t('options_general_replayHistoricalTasks'), t('options_general_replayHistoricalTasks_desc'))}
-            <div className="relative inline-flex cursor-pointer items-center">
-              <input id="replayHistoricalTasks" type="checkbox" checked={settings.replayHistoricalTasks}
-                onChange={e => updateSetting('replayHistoricalTasks', e.target.checked)} className="peer sr-only" />
-              <label htmlFor="replayHistoricalTasks" className={toggleCls(isDarkMode)}>
-                <span className="sr-only">{t('options_general_replayHistoricalTasks')}</span>
-              </label>
-            </div>
           </div>
         </div>
       </div>

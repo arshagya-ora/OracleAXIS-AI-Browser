@@ -28,6 +28,21 @@
   "nav_loadHistory_a11y": {
     "message": "è¼‰å…¥æ­·å²ç´€éŒ„"
   },
+  "nav_loadReplayHistory_a11y": {
+    "message": "載入重播歷史紀錄"
+  },
+  "nav_more_a11y": {
+    "message": "開啟歷史與錄製選單"
+  },
+  "nav_record": {
+    "message": "錄製"
+  },
+  "nav_record_next": {
+    "message": "錄製下一個任務"
+  },
+  "nav_record_armed": {
+    "message": "錄製已啟用"
+  },
   "nav_settings_a11y": {
     "message": "è¨­å®š"
   },
@@ -79,11 +94,26 @@
   "chat_history_empty": {
     "message": "æ²’æœ‰å¯ç”¨çš„å°è©±æ­·å²ç´€éŒ„"
   },
+  "replay_history_title": {
+    "message": "重播歷史紀錄"
+  },
+  "replay_history_empty": {
+    "message": "沒有可重播的任務"
+  },
   "chat_history_bookmark": {
     "message": "å°‡å·¥ä½œéšŽæ®µåŠ å…¥æ›¸ç±¤"
   },
   "chat_history_delete": {
     "message": "åˆªé™¤å·¥ä½œéšŽæ®µ"
+  },
+  "chat_recording_prompt": {
+    "message": "要將這次執行儲存到重播歷史紀錄嗎？"
+  },
+  "chat_recording_save": {
+    "message": "儲存"
+  },
+  "chat_recording_delete": {
+    "message": "刪除"
   },
   "chat_bookmarks_header": {
     "message": "å¿«é€Ÿå…¥é–€"

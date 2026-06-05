@@ -95,7 +95,12 @@ chrome.runtime.onConnect.addListener(port => {
             if (!message.tabId) return port.postMessage({ type: 'error', error: t('bg_errors_noTabId') });
 
             logger.info('new_task', message.tabId, message.task);
-            currentExecutor = await setupExecutor(message.taskId, message.task, browserContext);
+            currentExecutor = await setupExecutor(
+              message.taskId,
+              message.task,
+              browserContext,
+              Boolean(message.recordReplayHistory),
+            );
             subscribeToExecutorEvents(currentExecutor);
 
             const result = await currentExecutor.execute();
@@ -114,6 +119,7 @@ chrome.runtime.onConnect.addListener(port => {
               await applyFirewallSettings(browserContext);
               const { navigatorLLM, plannerLLM } = await resolveExecutorModels();
               currentExecutor.refreshModels(navigatorLLM, plannerLLM);
+              currentExecutor.setReplayHistoricalTasksEnabled(Boolean(message.recordReplayHistory));
               currentExecutor.addFollowUpTask(message.task);
               // Re-subscribe to events in case the previous subscription was cleaned up
               subscribeToExecutorEvents(currentExecutor);
@@ -226,7 +232,7 @@ chrome.runtime.onConnect.addListener(port => {
               // Switch to the specified tab
               await browserContext.switchTab(message.tabId);
               // Setup executor with the new taskId and a dummy task description
-              currentExecutor = await setupExecutor(message.taskId, message.task, browserContext);
+              currentExecutor = await setupExecutor(message.taskId, message.task, browserContext, false);
               subscribeToExecutorEvents(currentExecutor);
 
               // Run replayHistory with the history session ID
@@ -321,28 +327,37 @@ chrome.runtime.onConnect.addListener(port => {
   }
 });
 
-async function setupExecutor(taskId: string, task: string, browserContext: BrowserContext) {
+async function setupExecutor(
+  taskId: string,
+  task: string,
+  browserContext: BrowserContext,
+  recordReplayHistory = false,
+) {
   const { navigatorLLM, plannerLLM } = await resolveExecutorModels();
 
   await applyFirewallSettings(browserContext);
 
   const generalSettings = await generalSettingsStore.getSettings();
+  const executorSettings = {
+    ...generalSettings,
+    replayHistoricalTasks: recordReplayHistory,
+  };
   browserContext.updateConfig({
-    minimumWaitPageLoadTime: generalSettings.minWaitPageLoad / 1000.0,
-    displayHighlights: generalSettings.displayHighlights,
+    minimumWaitPageLoadTime: executorSettings.minWaitPageLoad / 1000.0,
+    displayHighlights: executorSettings.displayHighlights,
   });
 
   const executor = new Executor(task, taskId, browserContext, navigatorLLM, {
     plannerLLM,
     agentOptions: {
-      maxSteps: generalSettings.maxSteps,
-      maxFailures: generalSettings.maxFailures,
-      maxActionsPerStep: generalSettings.maxActionsPerStep,
-      useVision: generalSettings.useVision,
+      maxSteps: executorSettings.maxSteps,
+      maxFailures: executorSettings.maxFailures,
+      maxActionsPerStep: executorSettings.maxActionsPerStep,
+      useVision: executorSettings.useVision,
       useVisionForPlanner: true,
-      planningInterval: generalSettings.planningInterval,
+      planningInterval: executorSettings.planningInterval,
     },
-    generalSettings: generalSettings,
+    generalSettings: executorSettings,
   });
 
   return executor;

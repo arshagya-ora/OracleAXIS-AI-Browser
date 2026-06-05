@@ -57,10 +57,10 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
       onClick={() => setActiveList(id)}
       className={`px-4 py-1.5 text-sm font-medium ${
         activeList === id
-          ? 'bg-[#C74634] text-white'
+          ? 'bg-oracle-red text-white'
           : isDarkMode
-            ? 'bg-[#4A4644] text-[#C4BFBA] hover:text-white'
-            : 'bg-[#F8F7F3] text-[#2D2B29] border border-[#E0DDD5] hover:border-[#C74634] hover:text-[#C74634]'
+            ? 'bg-ebony-muted text-warm-gray hover:text-white'
+            : 'border border-warm-border bg-canvas text-ebony hover:border-oracle-red hover:text-oracle-red'
       }`}>
       {label}
     </Button>
@@ -81,16 +81,16 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
   return (
     <section className="space-y-6">
       <div className={card(isDarkMode)}>
-        <h2 className={`mb-5 text-xl font-semibold ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+        <h2 className={`mb-5 text-xl font-semibold ${isDarkMode ? 'text-[#D4CFC9]' : 'text-ebony'}`}>
           {t('options_firewall_header')}
         </h2>
 
         <div className="space-y-5">
           {/* Enable toggle */}
-          <div className={`rounded border p-4 ${isDarkMode ? 'border-[#4A4644] bg-[#2D2B29]' : 'border-[#E0DDD5] bg-[#F8F7F3]'}`}>
+          <div className={`rounded border p-4 ${isDarkMode ? 'border-ebony-muted bg-ebony' : 'border-warm-border bg-canvas'}`}>
             <div className="flex items-center justify-between">
               <label htmlFor="toggle-firewall"
-                className={`text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+                className={`text-sm font-medium ${isDarkMode ? 'text-[#D4CFC9]' : 'text-ebony'}`}>
                 {t('options_firewall_enableToggle')}
               </label>
               <div className="relative inline-block w-12 select-none">
@@ -98,7 +98,7 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
                   className="sr-only" id="toggle-firewall" />
                 <label htmlFor="toggle-firewall"
                   className={`block h-6 cursor-pointer overflow-hidden rounded-full ${
-                    isEnabled ? 'bg-[#C74634]' : isDarkMode ? 'bg-[#4A4644]' : 'bg-[#E0DDD5]'
+                    isEnabled ? 'bg-oracle-red' : isDarkMode ? 'bg-ebony-muted' : 'bg-warm-border'
                   }`}>
                   <span className="sr-only">{t('options_firewall_toggleFirewall_a11y')}</span>
                   <span className={`block size-6 rounded-full bg-white shadow transition-transform ${
@@ -124,13 +124,13 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
               onChange={e => setNewUrl(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleAddUrl(); }}
               placeholder={t('options_firewall_placeholders_domainUrl')}
-              className={`flex-1 rounded border px-3 py-2 text-sm focus:outline-none focus:border-[#C74634] focus:ring-2 focus:ring-[#C74634]/20 ${
+              className={`flex-1 rounded border px-3 py-2 text-sm focus:border-oracle-red focus:outline-none focus:ring-2 focus:ring-[#C74634]/20 ${
                 isDarkMode
-                  ? 'border-[#4A4644] bg-[#3A3836] text-[#D4CFC9] placeholder:text-[#6B6460]'
-                  : 'border-[#E0DDD5] bg-white text-[#2D2B29] placeholder:text-[#A09A94]'
+                  ? 'border-ebony-muted bg-ebony-light text-[#D4CFC9] placeholder:text-warm-text'
+                  : 'border-warm-border bg-white text-ebony placeholder:text-[#A09A94]'
               }`}
             />
-            <Button onClick={handleAddUrl} className="bg-[#C74634] px-4 py-2 text-sm text-white hover:bg-[#9E3929]">
+            <Button onClick={handleAddUrl} className="bg-oracle-red px-4 py-2 text-sm text-white hover:bg-oracle-red-dark">
               {t('options_firewall_btnAdd')}
             </Button>
           </div>
@@ -142,9 +142,9 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
                 {currentList.map(url => (
                   <li key={url}
                     className={`flex items-center justify-between rounded border px-3 py-2 ${
-                      isDarkMode ? 'border-[#4A4644] bg-[#2D2B29]' : 'border-[#E0DDD5] bg-[#F8F7F3]'
+                      isDarkMode ? 'border-ebony-muted bg-ebony' : 'border-warm-border bg-canvas'
                     }`}>
-                    <span className={`text-sm ${isDarkMode ? 'text-[#C4BFBA]' : 'text-[#2D2B29]'}`}>{url}</span>
+                    <span className={`text-sm ${isDarkMode ? 'text-warm-gray' : 'text-ebony'}`}>{url}</span>
                     <Button
                       variant="danger"
                       onClick={() => handleRemoveUrl(url, activeList)}
@@ -155,7 +155,7 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
                 ))}
               </ul>
             ) : (
-              <p className={`text-center text-sm ${isDarkMode ? 'text-[#6B6460]' : 'text-[#A09A94]'}`}>
+              <p className={`text-center text-sm ${isDarkMode ? 'text-warm-text' : 'text-[#A09A94]'}`}>
                 {emptyMsg}
               </p>
             )}
@@ -165,7 +165,7 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
 
       {/* How it works */}
       <div className={card(isDarkMode)}>
-        <h2 className={`mb-4 text-xl font-semibold ${isDarkMode ? 'text-[#D4CFC9]' : 'text-[#2D2B29]'}`}>
+        <h2 className={`mb-4 text-xl font-semibold ${isDarkMode ? 'text-[#D4CFC9]' : 'text-ebony'}`}>
           {t('options_firewall_howItWorks_header')}
         </h2>
         <p
@@ -174,7 +174,7 @@ export const FirewallSettings = ({ isDarkMode }: FirewallSettingsProps) => {
           }`}>
           {currentModeMessage}
         </p>
-        <ul className={`list-disc space-y-2 pl-5 text-left text-sm ${isDarkMode ? 'text-[#C4BFBA]' : 'text-[#6B6460]'}`}>
+        <ul className={`list-disc space-y-2 pl-5 text-left text-sm ${isDarkMode ? 'text-warm-gray' : 'text-warm-text'}`}>
           {t('options_firewall_howItWorks').split('\n').map((rule, index) => (
             <li key={index}>{rule}</li>
           ))}

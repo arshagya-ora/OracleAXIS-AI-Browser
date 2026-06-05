@@ -28,6 +28,21 @@
   "nav_loadHistory_a11y": {
     "message": "Carregar HistÃ³rico"
   },
+  "nav_loadReplayHistory_a11y": {
+    "message": "Carregar Histórico de Replay"
+  },
+  "nav_more_a11y": {
+    "message": "Abrir menu de histórico e gravação"
+  },
+  "nav_record": {
+    "message": "Gravar"
+  },
+  "nav_record_next": {
+    "message": "Gravar próxima tarefa"
+  },
+  "nav_record_armed": {
+    "message": "Gravação ativada"
+  },
   "nav_settings_a11y": {
     "message": "ConfiguraÃ§Ãµes"
   },
@@ -79,11 +94,26 @@
   "chat_history_empty": {
     "message": "Nenhum histÃ³rico de chat disponÃ­vel"
   },
+  "replay_history_title": {
+    "message": "Histórico de Replay"
+  },
+  "replay_history_empty": {
+    "message": "Nenhuma tarefa reproduzível disponível"
+  },
   "chat_history_bookmark": {
     "message": "Adicionar sessÃ£o aos favoritos"
   },
   "chat_history_delete": {
     "message": "Excluir sessÃ£o"
+  },
+  "chat_recording_prompt": {
+    "message": "Salvar esta execução no Histórico de Replay?"
+  },
+  "chat_recording_save": {
+    "message": "Salvar"
+  },
+  "chat_recording_delete": {
+    "message": "Excluir"
   },
   "chat_bookmarks_header": {
     "message": "InÃ­cio RÃ¡pido"

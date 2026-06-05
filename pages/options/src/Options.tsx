@@ -53,15 +53,15 @@ const Options = () => {
 
   return (
     <div
-      className={`flex min-h-screen min-w-[768px] ${isDarkMode ? 'bg-[#2D2B29] text-[#D4CFC9]' : 'bg-[#F8F7F3] text-[#2D2B29]'}`}>
+      className={`flex min-h-screen min-w-[768px] ${isDarkMode ? 'bg-ebony text-[#D4CFC9]' : 'bg-canvas text-ebony'}`}>
       {/* Vertical Navigation Bar — Ebony sidebar */}
       <nav
-        className={`w-52 shrink-0 border-r ${isDarkMode ? 'border-[#4A4644] bg-[#3A3836]' : 'border-[#E0DDD5] bg-white'}`}>
+        className={`w-52 shrink-0 border-r ${isDarkMode ? 'border-ebony-muted bg-ebony-light' : 'border-warm-border bg-white'}`}>
         <div className="p-5">
           {/* Oracle logomark + title */}
           <div className="mb-6 flex items-center gap-2.5">
             <img src="/oracle-logo.svg" alt="Oracle" className="h-5 w-8" />
-            <h1 className={`text-sm font-semibold uppercase tracking-widest ${isDarkMode ? 'text-[#C4BFBA]' : 'text-[#2D2B29]'}`}>
+            <h1 className={`text-sm font-semibold uppercase tracking-widest ${isDarkMode ? 'text-warm-gray' : 'text-ebony'}`}>
               {t('options_nav_header')}
             </h1>
           </div>
@@ -77,10 +77,10 @@ const Options = () => {
                       activeTab === item.id
                         ? 'border border-[#8B2C20] bg-[#8B2C20] text-white shadow-sm'
                         : isDarkMode
-                          ? 'border border-[#4A4644] bg-[#3A3836] text-[#D4CFC9] hover:border-[#8B2C20] hover:bg-[#8B2C20] hover:text-white'
-                          : 'border border-[#E0DDD5] bg-white text-[#2D2B29] hover:border-[#8B2C20] hover:bg-[#8B2C20] hover:text-white'
+                          ? 'border border-ebony-muted bg-ebony-light text-[#D4CFC9] hover:border-[#8B2C20] hover:bg-[#8B2C20] hover:text-white'
+                          : 'border border-warm-border bg-white text-ebony hover:border-[#8B2C20] hover:bg-[#8B2C20] hover:text-white'
                     }`}>
-                  <item.icon className="h-4 w-4 shrink-0" />
+                  <item.icon className="size-4 shrink-0" />
                   <span>{item.label}</span>
                 </button>
               </li>
@@ -90,7 +90,7 @@ const Options = () => {
       </nav>
 
       {/* Main Content Area */}
-      <main className={`flex-1 overflow-y-auto p-8 ${isDarkMode ? 'bg-[#2D2B29]' : 'bg-[#F8F7F3]'}`}>
+      <main className={`flex-1 overflow-y-auto p-8 ${isDarkMode ? 'bg-ebony' : 'bg-canvas'}`}>
         <div className="mx-auto min-w-[512px] max-w-screen-lg">{renderTabContent()}</div>
       </main>
     </div>

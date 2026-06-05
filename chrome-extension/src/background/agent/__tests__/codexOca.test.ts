@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 vi.mock('@extension/storage', async () => await import('../../../../../packages/storage/index'));
 
